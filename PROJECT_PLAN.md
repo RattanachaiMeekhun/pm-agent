@@ -20,7 +20,7 @@
 - **LLM:** Claude 3.5 Sonnet (via Anthropic API) or GPT-4o
 - **Orchestration:** LangChain + LangGraph (Stateful Multi-Agent)
 - **Backend:** FastAPI
-- **Frontend:** Next.js + Shadcn UI
+- **Frontend:** Next.js + antd
 - **Database:** Supabase (PostgreSQL)
 
 ## 4. Development Roadmap (4 Weeks)
