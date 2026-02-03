@@ -1,9 +1,10 @@
-class AgentState:
-    def __init__(self):
-        pass  # Implement state properties here
+from typing import TypedDict
 
-    def update(self):
-        pass  # Implement state update logic here
+class AgentState(TypedDict):
+    id: int
+    name: str
+    status: str
+    last_updated: str
+    version: str
 
-    def reset(self):
-        pass  # Implement state reset logic here
+# Additional implementation details go here
