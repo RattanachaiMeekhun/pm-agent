@@ -1,10 +1,8 @@
-from typing import TypedDict
+from typing import TypedDict, List, Optional
 
 class AgentState(TypedDict):
-    id: int
-    name: str
-    status: str
-    last_updated: str
-    version: str
-
-# Additional implementation details go here
+    messages: List[str]
+    raw_brief: str
+    analysis: str
+    missing_info: List[str]
+    sow_content: str
