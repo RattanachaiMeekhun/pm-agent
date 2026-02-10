@@ -1,8 +1,8 @@
-# Project Plan: Freelance Project Manager Agent (MVP)
+# Project Plan: PM Copilot Agent (MVP)
 
 ## 1. Project Goal
 
-สร้าง AI Agent ที่ทำหน้าที่เป็น "ผู้ช่วยบริหารโปรเจค" (Project Manager) สำหรับ Freelancer และ Digital Agency ขนาดเล็ก โดยเริ่มจาก MVP ที่แก้ปัญหาเรื่องการทำใบเสนอราคา (Quotation) และขอบเขตงาน (Scope of Work - SOW)
+สร้าง AI Agent ที่ทำหน้าที่เป็น "ผู้ช่วยบริหารโปรเจค" (Project Manager coplilot) สำหรับ Freelancer และ Project manager มืออาชีพ โดยเริ่มจาก MVP ที่แก้ปัญหาเรื่องการทำใบเสนอราคา (Quotation) และขอบเขตงาน (Scope of Work - SOW)
 
 ## 2. MVP Scope: "The SOW Architect"
 
@@ -36,9 +36,9 @@
 
 ### Phase 2: API & Backend (Week 2)
 
-- [ ] Setup FastAPI project structure
-- [ ] Create Endpoints: `/chat`, `/generate-sow`, `/history`
-- [ ] Implement Memory/Persistence (save chat history in postgreSQL)
+- [x] Setup FastAPI project structure
+- [x] Create Endpoints: `/chat`, `/generate-sow`, `/history`
+- [x] Implement Memory/Persistence (save chat history in postgreSQL)
 
 ### Phase 3: Frontend & UI (Week 3)
 
@@ -50,7 +50,7 @@
 ### Phase 4: Polish & Launch (Week 4)
 
 - [ ] Refine Prompts (Prompt Engineering)
-- [ ] User Testing (with real freelance briefs)
+- [ ] User Testing (with real client briefs/RFPs)
 - [ ] Deploy (Vercel for Frontend, Railway/Render for Backend)
 
 ## 5. System Prompt Strategy (Draft)
@@ -62,7 +62,7 @@
 
 1. NEVER assume features that are not explicitly stated.
 2. If the brief is vague (e.g., "Make an app like Uber"), you MUST ask clarifying questions first.
-3. Explicitly list "Out-of-Scope" items to protect the freelancer.
+3. Explicitly list "Out-of-Scope" items to ensure clarity and manage expectations.
 4. Tone: Professional, Consultative, Protective.
 
 **Output Structure:**

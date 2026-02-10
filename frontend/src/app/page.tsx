@@ -1,210 +1,219 @@
 "use client";
 
 import React from "react";
-import MainLayout from "@/components/layout/MainLayout";
+import { Layout, Typography, Button, Space, Card, Row, Col, theme } from "antd";
 import {
-  Card,
-  Col,
-  Row,
-  Statistic,
-  Table,
-  Tag,
-  Avatar,
-  Button,
-  Space,
-  Typography,
-} from "antd";
-import {
-  FolderOpenOutlined,
-  EditOutlined,
-  HourglassOutlined,
-  MoreOutlined,
-  ArrowUpOutlined,
+  RocketOutlined,
+  ThunderboltOutlined,
+  SafetyCertificateOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
+import Link from "next/link";
+import { useTheme } from "@/providers/ThemeProvider";
 
-const { Title } = Typography;
+const { Header, Content, Footer } = Layout;
+const { Title, Text, Paragraph } = Typography;
 
-// Mock Data
-interface DataType {
-  key: string;
-  name: string;
-  subName: string;
-  client: string;
-  clientLogo: string;
-  status: string;
-  lastModified: string;
-  type: string; // for icon color
-}
+export default function LandingPage() {
+  const {
+    token: { colorBgContainer, colorPrimary },
+  } = theme.useToken();
+  const { isDarkMode } = useTheme();
 
-const data: DataType[] = [
-  {
-    key: "1",
-    name: "Website Redesign",
-    subName: "Revamp for Q4 launch",
-    client: "Acme Corp",
-    clientLogo: "https://api.dicebear.com/7.x/identicon/svg?seed=Acme",
-    status: "Drafting",
-    lastModified: "2 hours ago",
-    type: "web",
-  },
-  {
-    key: "2",
-    name: "Mobile App MVP",
-    subName: "Initial scope definition",
-    client: "TechStart Inc",
-    clientLogo: "https://api.dicebear.com/7.x/identicon/svg?seed=Tech",
-    status: "Waiting",
-    lastModified: "1 day ago",
-    type: "app",
-  },
-  {
-    key: "3",
-    name: "E-commerce Platform",
-    subName: "Shopify Plus migration",
-    client: "RetailCo",
-    clientLogo: "https://api.dicebear.com/7.x/identicon/svg?seed=Retail",
-    status: "Completed",
-    lastModified: "3 days ago",
-    type: "commerce",
-  },
-  {
-    key: "4",
-    name: "Internal Tool",
-    subName: "Inventory management",
-    client: "Global Logistics",
-    clientLogo: "https://api.dicebear.com/7.x/identicon/svg?seed=Global",
-    status: "Drafting",
-    lastModified: "5 days ago",
-    type: "tool",
-  },
-];
-
-const columns: ColumnsType<DataType> = [
-  {
-    title: "Project Name",
-    dataIndex: "name",
-    key: "name",
-    render: (_, record) => (
-      <Space>
-        <Avatar
-          shape="square"
-          style={{ backgroundColor: "#e6f7ff", color: "#1890ff" }}
-          icon={<FolderOpenOutlined />}
-        />
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{ fontWeight: 500 }}>{record.name}</span>
-          <span style={{ fontSize: 12, color: "#8c8c8c" }}>
-            {record.subName}
-          </span>
-        </div>
-      </Space>
-    ),
-  },
-  {
-    title: "Client",
-    dataIndex: "client",
-    key: "client",
-    render: (_, record) => (
-      <Space>
-        <Avatar src={record.clientLogo} size="small" />
-        <span>{record.client}</span>
-      </Space>
-    ),
-  },
-  {
-    title: "Status",
-    key: "status",
-    dataIndex: "status",
-    render: (status) => {
-      let color = "default";
-      if (status === "Completed") color = "success";
-      if (status === "Drafting") color = "processing";
-      if (status === "Waiting") color = "warning";
-      return (
-        <Tag color={color} key={status}>
-          {status.toUpperCase()}
-        </Tag>
-      );
-    },
-  },
-  {
-    title: "Last Modified",
-    dataIndex: "lastModified",
-    key: "lastModified",
-  },
-  {
-    title: "Actions",
-    key: "action",
-    render: () => <Button type="text" icon={<MoreOutlined />} />,
-  },
-];
-
-export default function Home() {
   return (
-    <MainLayout>
-      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        {/* Stats Row */}
-        <Row gutter={16}>
-          <Col span={8}>
-            <Card variant="borderless">
-              <Statistic
-                title="Total Projects"
-                value={24}
-                prefix={<FolderOpenOutlined />}
-                suffix={
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: "#3f8600",
-                      marginLeft: 8,
-                      backgroundColor: "#f6ffed",
-                      padding: "2px 8px",
-                      borderRadius: 10,
-                    }}
-                  >
-                    <ArrowUpOutlined /> 12%
-                  </span>
-                }
-              />
-            </Card>
-          </Col>
-          <Col span={8}>
-            <Card variant="borderless">
-              <Statistic
-                title="Drafting in Progress"
-                value={5}
-                prefix={<EditOutlined />}
-                suffix={
-                  <span style={{ fontSize: 12, color: "#8c8c8c" }}>
-                    Active now
-                  </span>
-                }
-              />
-            </Card>
-          </Col>
-          <Col span={8}>
-            <Card variant="borderless">
-              <Statistic
-                title="Pending Review"
-                value={3}
-                prefix={<HourglassOutlined />}
-                suffix={
-                  <span style={{ fontSize: 12, color: "#8c8c8c" }}>
-                    Waiting for client
-                  </span>
-                }
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Table Section */}
-        <div>
-          <Title level={4}>Recent Projects</Title>
-          <Table columns={columns} dataSource={data} />
+    <Layout style={{ minHeight: "100vh" }}>
+      <Header
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: colorBgContainer,
+          padding: "0 24px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              background: colorPrimary,
+              borderRadius: 6,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              fontWeight: "bold",
+            }}
+          >
+            PM
+          </div>
+          <Text strong style={{ fontSize: 18 }}>
+            PM Agent
+          </Text>
         </div>
-      </div>
-    </MainLayout>
+        <Space size="large">
+          <Button type="text">Features</Button>
+          <Button type="text">Solutions</Button>
+          <Button type="text">Pricing</Button>
+          <Link href="/dashboard">
+            <Button type="primary">Launch Dashboard</Button>
+          </Link>
+        </Space>
+      </Header>
+
+      <Content>
+        {/* Hero Section */}
+        <div
+          style={{
+            padding: "100px 24px",
+            textAlign: "center",
+            background: isDarkMode
+              ? "linear-gradient(135deg, #1f1f1f 0%, #141414 100%)"
+              : "linear-gradient(135deg, #f0f2f5 0%, #ffffff 100%)",
+          }}
+        >
+          <div style={{ maxWidth: 800, margin: "0 auto" }}>
+            <Title
+              level={1}
+              style={{
+                fontSize: 56,
+                marginBottom: 24,
+                background: `linear-gradient(to right, ${colorPrimary}, #a0d911)`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Supercharge Your Project Management with AI
+            </Title>
+            <Paragraph
+              style={{ fontSize: 20, color: "gray", marginBottom: 40 }}
+            >
+              Automate workflows, predict risks, and deliver projects faster
+              than ever before. The intelligent assistant for modern project
+              managers.
+            </Paragraph>
+            <Space size="middle">
+              <Link href="/dashboard">
+                <Button
+                  type="primary"
+                  size="large"
+                  shape="round"
+                  icon={<RocketOutlined />}
+                >
+                  Get Started for Free
+                </Button>
+              </Link>
+              <Button size="large" shape="round">
+                View Documentation
+              </Button>
+            </Space>
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <div style={{ padding: "80px 24px", background: colorBgContainer }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 60 }}>
+              <Title level={2}>Why Choose PM Agent?</Title>
+              <Text type="secondary" style={{ fontSize: 16 }}>
+                Everything you need to manage complex projects with ease.
+              </Text>
+            </div>
+            <Row gutter={[32, 32]}>
+              <Col xs={24} md={8}>
+                <Card
+                  variant="borderless"
+                  hoverable
+                  style={{ height: "100%", textAlign: "center" }}
+                >
+                  <ThunderboltOutlined
+                    style={{
+                      fontSize: 48,
+                      color: colorPrimary,
+                      marginBottom: 24,
+                    }}
+                  />
+                  <Title level={4}>Real-time Insights</Title>
+                  <Paragraph type="secondary">
+                    Get instant updates and predictive analytics on your project
+                    health, budget, and timeline.
+                  </Paragraph>
+                </Card>
+              </Col>
+              <Col xs={24} md={8}>
+                <Card
+                  variant="borderless"
+                  hoverable
+                  style={{ height: "100%", textAlign: "center" }}
+                >
+                  <SafetyCertificateOutlined
+                    style={{
+                      fontSize: 48,
+                      color: colorPrimary,
+                      marginBottom: 24,
+                    }}
+                  />
+                  <Title level={4}>Automated Compliance</Title>
+                  <Paragraph type="secondary">
+                    Ensure all your deliverables meet industry standards
+                    automatically with our AI compliance checker.
+                  </Paragraph>
+                </Card>
+              </Col>
+              <Col xs={24} md={8}>
+                <Card
+                  bordered={false}
+                  hoverable
+                  style={{ height: "100%", textAlign: "center" }}
+                >
+                  <TeamOutlined
+                    style={{
+                      fontSize: 48,
+                      color: colorPrimary,
+                      marginBottom: 24,
+                    }}
+                  />
+                  <Title level={4}>Smart Resource Allocation</Title>
+                  <Paragraph type="secondary">
+                    Optimize team workload and prevent burnout with intelligent
+                    resource distribution suggestions.
+                  </Paragraph>
+                </Card>
+              </Col>
+            </Row>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div
+          style={{
+            padding: "80px 24px",
+            textAlign: "center",
+            background: isDarkMode ? "#141414" : "#f0f2f5",
+          }}
+        >
+          <div style={{ maxWidth: 600, margin: "0 auto" }}>
+            <Title level={2}>Ready to Transform Your Workflow?</Title>
+            <Paragraph style={{ fontSize: 16, marginBottom: 32 }}>
+              Join thousands of project managers who are delivering better
+              results with PM Agent.
+            </Paragraph>
+            <Link href="/dashboard">
+              <Button type="primary" size="large" shape="round">
+                Start Your Free Trial
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </Content>
+
+      <Footer style={{ textAlign: "center", background: colorBgContainer }}>
+        PM Agent ©{new Date().getFullYear()} Created with Ant Design & AI
+      </Footer>
+    </Layout>
   );
 }

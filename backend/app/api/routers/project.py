@@ -48,3 +48,50 @@ async def chat_endpoint(request: ChatRequest):
     except Exception as e:
         print(f"Error: {e}") # Print log ดู error จริง
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/history/{thread_id}")
+async def get_chat_history(thread_id: str):
+    try:
+        async with get_checkpointer() as checkpointer:
+            workflow = build_graph(checkpointer=checkpointer)
+            config = {"configurable": {"thread_id": thread_id}}
+            
+            state_snapshot = await workflow.aget_state(config)
+            
+            if not state_snapshot.values:
+                 return {"messages": []}
+            
+            messages = state_snapshot.values.get("messages", [])
+            
+            # Serialize messages
+            history = []
+            for msg in messages:
+                role = "user"
+                if msg.type == "ai":
+                    role = "assistant"
+                elif msg.type == "human":
+                    role = "user"
+                elif msg.type == "system":
+                    role = "system"
+                
+                history.append({
+                    "role": role,
+                    "content": msg.content,
+                    "type": msg.type
+                })
+                
+            return {"messages": history, "thread_id": thread_id}
+
+    except Exception as e:
+        print(f"Error fetching history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/project/create")
+async def create_project():
+    # Placeholder for project creation logic
+    return {"status": "Project creation endpoint"}
+
+@router.get("/project/{project_id}")
+async def get_project(project_id: str):
+    # Placeholder for getting project details
+    return {"project_id": project_id, "details": "Project details here"}

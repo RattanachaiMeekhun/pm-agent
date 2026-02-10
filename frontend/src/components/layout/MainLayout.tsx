@@ -17,15 +17,16 @@ import {
   TeamOutlined,
   FileTextOutlined,
   SettingOutlined,
-  MenuUnfoldOutlined,
-  MenuFoldOutlined,
+  MenuOutlined,
   PlusOutlined,
   FilterOutlined,
   UserOutlined,
   BulbOutlined,
   BulbFilled,
+  HistoryOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "@/providers/ThemeProvider";
+import { useRouter } from "next/navigation";
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -34,30 +35,18 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const { isDarkMode, toggleTheme } = useTheme();
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: { colorBgContainer, borderRadiusLG, colorBgLayout },
   } = theme.useToken();
+  const router = useRouter(); // Import this
 
   const menuItems = [
     {
       key: "dashboard",
       icon: <AppstoreOutlined />,
-      label: "Dashboard",
+      label: "My Projects",
+      onClick: () => router.push("/dashboard"),
     },
-    {
-      key: "projects",
-      icon: <FolderOpenOutlined />,
-      label: "Projects",
-    },
-    {
-      key: "clients",
-      icon: <TeamOutlined />,
-      label: "Clients",
-    },
-    {
-      key: "templates",
-      icon: <FileTextOutlined />,
-      label: "Templates",
-    },
+
     {
       key: "settings",
       icon: <SettingOutlined />,
@@ -73,135 +62,124 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         collapsed={collapsed}
         theme={isDarkMode ? "dark" : "light"}
         style={{
-          borderRight: isDarkMode ? "none" : "1px solid #f0f0f0",
+          borderRight: isDarkMode ? "none" : "1px solid #e5e5e5",
+          background: isDarkMode ? "#1e1e1e" : "#f0f4f9",
         }}
-        width={250}
+        width={260}
       >
         <div
           style={{
-            padding: "24px 16px",
+            padding: "20px 16px",
             display: "flex",
             alignItems: "center",
-            gap: 12,
+            justifyContent: "space-between",
           }}
         >
-          <Avatar
-            style={{ backgroundColor: "#196ee6", verticalAlign: "middle" }}
-            size="large"
-            shape="square"
-          >
-            PM
-          </Avatar>
-          {!collapsed && (
-            <div style={{ lineHeight: "1.2" }}>
-              <Title
-                level={5}
-                style={{ margin: 0, color: isDarkMode ? "#fff" : "inherit" }}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
+              style={{ fontSize: "16px" }}
+            />
+            {!collapsed && (
+              <Typography.Text
+                strong
+                style={{ fontSize: 18, color: isDarkMode ? "#fff" : "#444746" }}
               >
-                PM Agent
-              </Title>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                Pro Workspace
-              </Text>
-            </div>
-          )}
+                Gemini PM
+              </Typography.Text>
+            )}
+          </div>
         </div>
+
+        {!collapsed && (
+          <div style={{ padding: "0 16px 16px 16px" }}>
+            <Button
+              block
+              style={{
+                borderRadius: 20,
+                height: 48,
+                background: isDarkMode ? "#2d2d2d" : "#dde3ea",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                paddingLeft: 20,
+                color: isDarkMode ? "#e3e3e3" : "#1f1f1f",
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+              icon={
+                <PlusOutlined
+                  style={{ color: isDarkMode ? "#a8c7fa" : "#444746" }}
+                />
+              }
+              onClick={() => router.push("/project/new")}
+            >
+              New Project
+            </Button>
+          </div>
+        )}
 
         <Menu
           theme={isDarkMode ? "dark" : "light"}
           mode="inline"
           defaultSelectedKeys={["dashboard"]}
           items={menuItems}
-          style={{ borderRight: 0 }}
+          style={{
+            borderRight: 0,
+            background: "transparent",
+            fontSize: 14,
+          }}
         />
 
-        {/* Bottom User Section could go here, absolute positioned or flex */}
+        {/* User Profile at Bottom */}
         <div
           style={{
             position: "absolute",
             bottom: 0,
             width: "100%",
             padding: "16px",
-            borderTop: isDarkMode ? "1px solid #303030" : "1px solid #f0f0f0",
           }}
         >
-          <Space
-            align="center"
-            style={{
-              width: "100%",
-              justifyContent: collapsed ? "center" : "flex-start",
-            }}
-          >
-            <Avatar
-              icon={<UserOutlined />}
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-            />
-            {!collapsed && (
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <Text strong>Alex Morgan</Text>
-                <Text type="secondary" style={{ fontSize: 10 }}>
-                  alex@agency.com
-                </Text>
-              </div>
-            )}
-          </Space>
+          {/* ...existing user code... */}
         </div>
       </Sider>
 
-      <Layout>
+      <Layout style={{ background: isDarkMode ? "#131314" : "#ffffff" }}>
         <Header
           style={{
             padding: "0 24px",
-            background: colorBgContainer,
+            background: "transparent",
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
-            borderBottom: isDarkMode ? "none" : "1px solid #f0f0f0",
+            justifyContent: "flex-end", // Push to right
+            height: 64,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <Button
-              type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
-              style={{
-                fontSize: "16px",
-                width: 64,
-                height: 64,
-                marginRight: 16,
-              }}
-            />
-            <div className="header-title">
-              <Title level={4} style={{ margin: 0 }}>
-                Dashboard
-              </Title>
-              <Text type="secondary">
-                Overview of your active SOWs and client briefs.
-              </Text>
-            </div>
-          </div>
-
           <Space>
             <Button
               type="text"
               icon={isDarkMode ? <BulbFilled /> : <BulbOutlined />}
               onClick={toggleTheme}
             />
-            <Button icon={<FilterOutlined />}>Filter</Button>
-            <Button type="primary" icon={<PlusOutlined />}>
-              New Project
-            </Button>
+            <Avatar
+              icon={<UserOutlined />}
+              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+              style={{ cursor: "pointer" }}
+            />
           </Space>
         </Header>
 
         <Content
           style={{
-            margin: "24px 24px",
-            padding: 24,
-            minHeight: 280,
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-            overflowY: "scroll",
+            margin: 16,
+            padding: 0,
+            overflow: "hidden", // Let children handle scroll
+            background: "transparent",
+            borderRadius: isDarkMode ? 24 : 0,
+            // Gemini often has rounded corners on the main container in web app
           }}
         >
           {children}
