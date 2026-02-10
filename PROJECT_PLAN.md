@@ -17,7 +17,7 @@
 ## 3. Tech Stack
 
 - **Core AI:** Python (3.10+)
-- **LLM:** Claude 3.5 Sonnet (via Anthropic API) or GPT-4o
+- **LLM:** Any model
 - **Orchestration:** LangChain + LangGraph (Stateful Multi-Agent)
 - **Backend:** FastAPI
 - **Frontend:** Next.js + antd
@@ -27,18 +27,18 @@
 
 ### Phase 1: Core Logic (Week 1)
 
-- [ ] Initialize Repository & Environment
-- [ ] Design LangGraph State (Graph Schema)
-- [ ] Implement Node A: Analyst (Analyze requirements)
-- [ ] Implement Node B: Interviewer (Generate questions)
-- [ ] Implement Node C: Writer (Draft SOW)
-- [ ] Test flow with mock data
+- [x] Initialize Repository & Environment
+- [x] Design LangGraph State (Graph Schema)
+- [x] Implement Node A: Analyst (Analyze requirements)
+- [x] Implement Node B: Interviewer (Generate questions)
+- [x] Implement Node C: Writer (Draft SOW)
+- [x] Test flow with mock data
 
 ### Phase 2: API & Backend (Week 2)
 
 - [ ] Setup FastAPI project structure
 - [ ] Create Endpoints: `/chat`, `/generate-sow`, `/history`
-- [ ] Implement Memory/Persistence (save chat history in Supabase)
+- [ ] Implement Memory/Persistence (save chat history in postgreSQL)
 
 ### Phase 3: Frontend & UI (Week 3)
 
