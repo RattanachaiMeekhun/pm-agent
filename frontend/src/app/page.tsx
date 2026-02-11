@@ -166,7 +166,7 @@ export default function LandingPage() {
               </Col>
               <Col xs={24} md={8}>
                 <Card
-                  bordered={false}
+                  variant="borderless"
                   hoverable
                   style={{ height: "100%", textAlign: "center" }}
                 >

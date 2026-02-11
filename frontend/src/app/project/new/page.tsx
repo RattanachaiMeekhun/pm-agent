@@ -29,6 +29,8 @@ import remarkGfm from "remark-gfm";
 import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/layout/MainLayout";
 import { useTheme } from "@/providers/ThemeProvider";
+import { useMutation } from "@tanstack/react-query";
+import api from "@/lib/Axios";
 
 const { Content } = Layout;
 const { TextArea } = Input;
@@ -44,7 +46,6 @@ export default function NewProjectPage() {
   const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
   const [sowContent, setSowContent] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -52,6 +53,31 @@ export default function NewProjectPage() {
 
   const { isDarkMode } = useTheme();
   const { token } = theme.useToken();
+
+  const { mutate: sendMessage, isPending: isSending } = useMutation({
+    mutationFn: async ({ msg, tId }: { msg: string; tId: string }) => {
+      const { data } = await api.post("/api/v1/project/consult", {
+        message: msg,
+        thread_id: tId,
+      });
+      return data;
+    },
+    onSuccess: (data, variables) => {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: data.response },
+      ]);
+      if (
+        data.stage === "writer" ||
+        (data?.response && data.response.toLowerCase().includes("sow"))
+      ) {
+        fetchSow(variables.tId);
+      }
+    },
+    onError: () => {
+      antMessage.error("Failed to get response.");
+    },
+  });
 
   useEffect(() => {
     const newThreadId = crypto.randomUUID();
@@ -81,84 +107,30 @@ export default function NewProjectPage() {
     }
   }, []);
 
-  const sendInitialMessage = async (msg: string, tId: string) => {
+  const sendInitialMessage = (msg: string, tId: string) => {
     setMessages((prev) => [...prev, { role: "user", content: msg }]);
-    setLoading(true);
-    try {
-      const response = await fetch("http://localhost:8000/api/v1/project/consult", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg, thread_id: tId }),
-      });
-      if (!response.ok) throw new Error("Failed");
-      const data = await response.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.response },
-      ]);
-      if (
-        data.stage === "writer" ||
-        (data.response && data.response.toLowerCase().includes("sow"))
-      ) {
-        // Pass tId specifically because state might stale in closure
-        fetchSow(tId);
-      }
-    } catch (e) {
-      console.error(e);
-      antMessage.error("Failed to start conversation");
-    } finally {
-      setLoading(false);
-    }
+    sendMessage({ msg, tId });
   };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, isSending]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     if (!input.trim()) return;
     const userMessage = input;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
-    setLoading(true);
-
-    try {
-      const response = await fetch("http://localhost:8000/api/v1/project/consult", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage, thread_id: threadId }),
-      });
-
-      if (!response.ok) throw new Error("Failed to send message");
-      const data = await response.json();
-
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.response },
-      ]);
-      if (
-        data.stage === "writer" ||
-        (data.response && data.response.toLowerCase().includes("sow"))
-      ) {
-        fetchSow(threadId);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      antMessage.error("Failed to get response.");
-    } finally {
-      setLoading(false);
-    }
+    sendMessage({ msg: userMessage, tId: threadId });
   };
 
   const fetchSow = async (tId: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/sow/${tId}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.status === "completed" && data.sow_content) {
-          setSowContent(data.sow_content);
-          antMessage.success("Scope of Work generated!");
-        }
+      const response = await api.get(`/api/v1/sow/${tId}`);
+      const data = response.data;
+      if (data.status === "completed" && data.sow_content) {
+        setSowContent(data.sow_content);
+        antMessage.success("Scope of Work generated!");
       }
     } catch (error) {
       console.error("Error fetching SOW:", error);
@@ -274,7 +246,7 @@ export default function NewProjectPage() {
                       </div>
                     </div>
                   ))}
-                  {loading && (
+                  {isSending && (
                     <div style={{ display: "flex", gap: 16 }}>
                       <Avatar
                         src="https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg"
@@ -321,7 +293,7 @@ export default function NewProjectPage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Reply to PM Copilot..."
-                    bordered={false}
+                    variant="borderless"
                     style={{
                       flex: 1,
                       color: isDarkMode ? "#e3e3e3" : "#1f1f1f",
@@ -370,7 +342,13 @@ export default function NewProjectPage() {
                     <Title level={5} style={{ margin: 0 }}>
                       LIVE DOCUMENT
                     </Title>
-                    <Button icon={<DownloadOutlined />} disabled={!sowContent}>
+                    <Button
+                      icon={<DownloadOutlined />}
+                      disabled={!sowContent}
+                      onClick={() => {
+                        console.log({ sowContent });
+                      }}
+                    >
                       Export
                     </Button>
                   </div>

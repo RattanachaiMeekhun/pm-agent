@@ -1,10 +1,25 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.routers import project, sow
 from app.db.session import engine   
 from app.db import models
 
 app = FastAPI(title="PM Agent API", version="1.0.0")
+
+# Configure CORS
+origins = [
+    "http://localhost:3000",  # React app
+    "http://localhost:8000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Create Database Tables
 models.Base.metadata.create_all(bind=engine)

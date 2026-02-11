@@ -1,9 +1,12 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
+from requests import Session
 from app.agent.graph import build_graph
-from app.agent.checkpoint import get_checkpointer # <--- Import ใหม่
-
+from app.agent.checkpoint import get_checkpointer
+from app.schemas.project import ProjectCreate
+from app.db.session import get_db
+from app.db import models # <--- Import ใหม่ 
 router = APIRouter()
 
 class ChatRequest(BaseModel):
@@ -87,8 +90,28 @@ async def get_chat_history(thread_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/project/create")
-async def create_project():
-    # Placeholder for project creation logic
+async def create_project(project:ProjectCreate, db: Session = Depends(get_db)):
+    try:
+        db_project = db.query(models.Project).filter(models.Project.name == project.name).first()
+        if db_project:
+            raise HTTPException(status_code=400, detail="Project with this name already exists")
+   
+        new_project = models.Project(
+            name=project.name,
+            client=project.client,
+            budget=project.budget,
+            description=project.description,
+            is_active=project.is_active,
+            status=project.status.value, 
+            start_date=project.start_date,
+            end_date=project.end_date
+        )
+        db.add(new_project)
+        db.commit()
+        db.refresh(new_project)
+    except Exception as e:
+        print(f"Error creating project: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     return {"status": "Project creation endpoint"}
 
 @router.get("/project/{project_id}")
