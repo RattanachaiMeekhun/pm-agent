@@ -1,66 +1,77 @@
 import os
-from dotenv import load_dotenv # <--- เพิ่มบรรทัดนี้
-
-# โหลด .env ทันทีที่ไฟล์นี้ทำงาน
-load_dotenv()
-
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.chat_models import ChatOllama
+from app.config import settings
 
-def get_llm():
+# จำลองแนวคิด ADK: การกำหนด Agent Configuration ที่เป็นศูนย์กลาง
+class AgentConfig:
     """
-    Factory function to initialize the LLM based on environment variables.
+    เลียนแบบ Google ADK ADK LlmAgent Config 
+    เพื่อให้ง่ายต่อการจัดการ Model Parameters และ Safety Settings
     """
-    provider = os.getenv("LLM_PROVIDER", "openai").lower()
-    model_name = os.getenv("LLM_MODEL_NAME", "gpt-4o")
-    api_key = os.getenv("LLM_API_KEY")
-    base_url = os.getenv("LLM_BASE_URL") # ใช้สำหรับ DeepSeek หรือ Local API
+    def __init__(self, provider: str, model_name: str, temperature: float = 0.7):
+        self.provider = provider
+        self.model_name = model_name
+        self.temperature = temperature
+        self.safety_settings = self._get_default_safety_settings()
 
-    if provider == "openai":
-        return ChatOpenAI(
-            model=model_name, 
-            api_key=api_key,
-            temperature=0.7
-        )
-    
-    elif provider == "openrouter":
-        return ChatOpenAI(
-            api_key=api_key,
-            base_url=base_url or "https://openrouter.ai/api/v1",
-            temperature=0.7
-        )
-    
-    elif provider == "deepseek":
-        # DeepSeek ใช้ Client เดียวกับ OpenAI แต่เปลี่ยน Base URL
-        return ChatOpenAI(
-            api_key=api_key,
-            base_url=base_url or "https://api.deepseek.com",
-            temperature=0.7
-        )
+    def _get_default_safety_settings(self):
+        # มาตรฐาน GEAR ต้องมีการคุมความปลอดภัย (Safety Governance)
+        return {
+            "HARM_CATEGORY_HARASSMENT": "BLOCK_MEDIUM_AND_ABOVE",
+            "HARM_CATEGORY_HATE_SPEECH": "BLOCK_MEDIUM_AND_ABOVE",
+        }
 
-    elif provider == "anthropic":
-        return ChatAnthropic(
-            model=model_name, 
-            api_key=api_key,
-            temperature=0.7
-        )
+class LLMProvider:
+    """
+    Standardized Provider ที่ช่วยให้การเปลี่ยน Model ทำได้ง่ายผ่าน Config เดียว
+    """
+    @staticmethod
+    def get_model(config: AgentConfig):
+        # Use generic API key if specific one is missing
+        api_key = settings.LLM_API_KEY
     
-    elif provider == "google":
-        return ChatGoogleGenerativeAI(
-            model=model_name,
-            google_api_key=api_key,
-            temperature=0.7
-        )
+        if config.provider == "google":
+            return ChatGoogleGenerativeAI(
+                model=config.model_name,
+                google_api_key=settings.GOOGLE_API_KEY or api_key,
+                temperature=config.temperature,
+                safety_settings=config.safety_settings
+            )
+        elif config.provider == "openai":
+            return ChatOpenAI(
+                model=config.model_name,
+                openai_api_key=settings.OPENAI_API_KEY or api_key,
+                temperature=config.temperature
+            )
+        elif config.provider == "anthropic":
+            return ChatAnthropic(
+                model=config.model_name,
+                anthropic_api_key=settings.ANTHROPIC_API_KEY or api_key,
+                temperature=config.temperature
+            )
+        elif config.provider == "openrouter":
+             return ChatOpenAI(
+                model=config.model_name,
+                openai_api_key=api_key,
+                base_url=settings.LLM_BASE_URL or "https://openrouter.ai/api/v1",
+                temperature=config.temperature
+            )
+        elif config.provider == "deepseek":
+             return ChatOpenAI(
+                model=config.model_name,
+                openai_api_key=api_key,
+                base_url=settings.LLM_BASE_URL or "https://api.deepseek.com",
+                temperature=config.temperature
+            )
+        raise ValueError(f"Unsupported provider: {config.provider}")
 
-    elif provider == "ollama":
-        # สำหรับรัน Local Model
-        return ChatOllama(
-            model=model_name,
-            base_url=base_url or "http://localhost:11434",
-            temperature=0.7
-        )
-    
-    else:
-        raise ValueError(f"Unsupported LLM_PROVIDER: {provider}")
+# วิธีการเรียกใช้งานใน nodes.py หรือ graph.py
+# สามารถเปลี่ยน Model ได้ง่ายๆ แค่แก้ Config
+current_config = AgentConfig(
+    provider=settings.LLM_PROVIDER, 
+    model_name=settings.LLM_MODEL_NAME, 
+    temperature=0.2 # ปรับต่ำเพื่อให้ PM Agent ตอบคำถามแม่นยำขึ้น
+)
+llm = LLMProvider.get_model(current_config)

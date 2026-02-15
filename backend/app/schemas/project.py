@@ -20,7 +20,7 @@ class ProjectBase(BaseModel):
     end_date: Optional[datetime] = None
 
 class ProjectCreate(ProjectBase):
-    pass
+    thread_id: str
 
 class Project(ProjectBase):
     id: int

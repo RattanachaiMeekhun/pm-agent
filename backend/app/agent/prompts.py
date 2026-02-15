@@ -10,7 +10,7 @@ Instructions:
     *   **Executive Summary**
     *   **Key Features** (Breakdown into modules)
     *   **Tech Stack** (Propose one)
-    *   **Timeline** (Estimate based on complexity)
+    *   **Timeline** (Estimate based on complexity: Small < 1mo, Medium 2-3mo, Large > 4mo. EXPLAIN WHY.)
 
 Output Format:
 Return a JSON object:

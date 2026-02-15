@@ -14,6 +14,12 @@ import {
   message as antMessage,
   Empty,
   theme,
+  Modal,
+  Form,
+  DatePicker,
+  InputNumber,
+  Select,
+  Drawer,
 } from "antd";
 import {
   SendOutlined,
@@ -23,6 +29,8 @@ import {
   DownloadOutlined,
   ArrowLeftOutlined,
   LoadingOutlined,
+  SaveOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -32,13 +40,18 @@ import { useTheme } from "@/providers/ThemeProvider";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/Axios";
 
-const { Content } = Layout;
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 
 interface Message {
   role: "user" | "assistant" | "system";
   content: string;
+}
+
+interface ChatThread {
+  thread_id: string;
+  title: string;
+  updated_at: string;
 }
 
 export default function NewProjectPage() {
@@ -48,6 +61,51 @@ export default function NewProjectPage() {
   const [input, setInput] = useState("");
   const [sowContent, setSowContent] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyThreads, setHistoryThreads] = useState<ChatThread[]>([]);
+  const [form] = Form.useForm();
+
+  const showModal = () => {
+    setIsModalOpen(true);
+    // You might want to pre-fill description with sowContent
+    if (sowContent) {
+      form.setFieldsValue({ description: sowContent });
+    }
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
+
+  const onFinish = async (values: any) => {
+    setCreateLoading(true);
+    try {
+      const payload = {
+        name: values.name,
+        client: values.client,
+        budget: values.budget,
+        description: values.description,
+        status: "not_started",
+        start_date: values.dateRange ? values.dateRange[0].toISOString() : null,
+        end_date: values.dateRange ? values.dateRange[1].toISOString() : null,
+        thread_id: threadId,
+      };
+
+      await api.post("/api/v1/project/create", payload);
+      antMessage.success("Project created successfully!");
+      setIsModalOpen(false);
+      router.push("/dashboard");
+    } catch (error: any) {
+      console.error("Error creating project:", error);
+      antMessage.error(
+        error.response?.data?.detail || "Failed to create project.",
+      );
+    } finally {
+      setCreateLoading(false);
+    }
+  };
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
 
@@ -79,33 +137,119 @@ export default function NewProjectPage() {
     },
   });
 
-  useEffect(() => {
-    const newThreadId = crypto.randomUUID();
-    setThreadId(newThreadId);
-
-    const initialMsg = searchParams.get("msg");
-    const project = searchParams.get("project");
-
-    if (initialMsg && !initialized.current) {
-      initialized.current = true;
-      setMessages([
-        {
-          role: "assistant",
-          content: `Starting project "**${project || "New Project"}**"...\n\nAnalyzing your requirements...`,
-        },
-      ]);
-      sendInitialMessage(initialMsg, newThreadId);
-    } else if (!initialized.current) {
-      initialized.current = true;
-      setMessages([
-        {
-          role: "assistant",
-          content:
-            "**Hello! I am your PM Copilot.**\n\nPlease tell me about the project you want to build. I'll help you define the requirements and generate a professional Scope of Work (SOW).",
-        },
-      ]);
+  const fetchChatHistory = async (tId: string) => {
+    try {
+      const { data } = await api.get(`/api/v1/project/history/${tId}`);
+      if (
+        data &&
+        data.messages &&
+        Array.isArray(data.messages) &&
+        data.messages.length > 0
+      ) {
+        setMessages(data.messages);
+        return true;
+      }
+    } catch (error) {
+      console.error("Error fetching history:", error);
     }
-  }, []);
+    return false;
+  };
+
+  const fetchThreads = async () => {
+    try {
+      const { data } = await api.get("/api/v1/project/threads");
+      setHistoryThreads(data);
+    } catch (error) {
+      console.error("Failed to load history", error);
+    }
+  };
+
+  const openHistory = () => {
+    setHistoryOpen(true);
+    fetchThreads();
+  };
+
+  const loadThread = (tId: string) => {
+    setHistoryOpen(false);
+    setMessages([]);
+    setSowContent(null);
+    router.push(`/project/new?threadId=${tId}`);
+  };
+
+  useEffect(() => {
+    const initSession = async () => {
+      if (initialized.current) return;
+
+      const urlThreadId = searchParams.get("threadId");
+
+      if (urlThreadId) {
+        // Case 1: Resume specific thread
+        initialized.current = true;
+        setThreadId(urlThreadId);
+        const hasHistory = await fetchChatHistory(urlThreadId);
+        fetchSow(urlThreadId);
+
+        if (!hasHistory) {
+          // Fallback if history missing
+          setMessages([
+            {
+              role: "assistant",
+              content:
+                "Messages not found for this thread. Starting fresh context...",
+            },
+          ]);
+        }
+      } else {
+        // Case 2: Start new session
+        const newThreadId = crypto.randomUUID();
+        setThreadId(newThreadId);
+
+        // Only send strict welcome if we haven't already
+        // Check if we are "re-entering" due to strict mode or something?
+        // initialized.current handles that.
+        initialized.current = true;
+
+        const initialMsg = searchParams.get("msg");
+        const project = searchParams.get("project");
+
+        if (initialMsg) {
+          setMessages([
+            {
+              role: "assistant",
+              content: `Starting project "**${project || "New Project"}**"...\n\nAnalyzing your requirements...`,
+            },
+          ]);
+          sendInitialMessage(initialMsg, newThreadId);
+        } else {
+          setMessages([
+            {
+              role: "assistant",
+              content:
+                "**Hello! I am your PM Copilot.**\n\nPlease tell me about the project you want to build. I'll help you define the requirements and generate a professional Scope of Work (SOW).",
+            },
+          ]);
+        }
+      }
+    };
+
+    // We need to allow re-running if searchParams change (e.g. user clicks history item)
+    // So we reset initialized.current if threadId matches urlThreadId?
+    // Actually, if we use [searchParams], it runs on change.
+    // We need to handle the "initialized" logic carefully.
+
+    // Reset initialized if threadId in state != threadId in URL?
+    const urlThreadId = searchParams.get("threadId");
+    if (urlThreadId && urlThreadId !== threadId && threadId !== "") {
+      initialized.current = false;
+    }
+    // Also if no url threadId and we have one, it means we navigated to "new"?
+    if (!urlThreadId && threadId !== "" && messages.length > 2) {
+      // Logic is tricky here.
+    }
+
+    // Simplest: Just run initSession()
+    initSession();
+  }, [searchParams]);
 
   const sendInitialMessage = (msg: string, tId: string) => {
     setMessages((prev) => [...prev, { role: "user", content: msg }]);
@@ -168,6 +312,8 @@ export default function NewProjectPage() {
                 style={{
                   display: "flex",
                   alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingRight: 24,
                 }}
               >
                 <Button
@@ -176,6 +322,13 @@ export default function NewProjectPage() {
                   onClick={() => router.push("/dashboard")}
                 >
                   Back
+                </Button>
+                <Button
+                  icon={<HistoryOutlined />}
+                  type="text"
+                  onClick={openHistory}
+                >
+                  History
                 </Button>
               </div>
 
@@ -342,15 +495,25 @@ export default function NewProjectPage() {
                     <Title level={5} style={{ margin: 0 }}>
                       LIVE DOCUMENT
                     </Title>
-                    <Button
-                      icon={<DownloadOutlined />}
-                      disabled={!sowContent}
-                      onClick={() => {
-                        console.log({ sowContent });
-                      }}
-                    >
-                      Export
-                    </Button>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <Button
+                        icon={<DownloadOutlined />}
+                        disabled={!sowContent}
+                        onClick={() => {
+                          // Export logic (e.g. PDF download) can be here
+                          console.log({ sowContent });
+                        }}
+                      >
+                        Export
+                      </Button>
+                      <Button
+                        type="primary"
+                        icon={<SaveOutlined />}
+                        onClick={showModal}
+                      >
+                        Create Project
+                      </Button>
+                    </div>
                   </div>
 
                   <Card
@@ -372,6 +535,104 @@ export default function NewProjectPage() {
             </Splitter.Panel>
           )}
         </Splitter>
+
+        <Drawer
+          title="Chat History"
+          placement="left"
+          onClose={() => setHistoryOpen(false)}
+          open={historyOpen}
+          width={320}
+          styles={{ body: { padding: 0 } }}
+        >
+          <List
+            dataSource={historyThreads}
+            renderItem={(item) => (
+              <List.Item
+                onClick={() => loadThread(item.thread_id)}
+                style={{
+                  cursor: "pointer",
+                  padding: "12px 16px",
+                  borderBottom: "1px solid #f0f0f0",
+                }}
+                className="history-item"
+              >
+                <List.Item.Meta
+                  title={
+                    <Typography.Text ellipsis>{item.title}</Typography.Text>
+                  }
+                  description={
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      {new Date(item.updated_at).toLocaleString()}
+                    </Typography.Text>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        </Drawer>
+
+        <Modal
+          title="Create New Project"
+          open={isModalOpen}
+          onCancel={handleCancel}
+          footer={null}
+        >
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={onFinish}
+            initialValues={{}}
+          >
+            <Form.Item
+              name="name"
+              label="Project Name"
+              rules={[{ required: true, message: "Please enter project name" }]}
+            >
+              <Input placeholder="Enter project name" />
+            </Form.Item>
+
+            <Form.Item name="client" label="Client Name">
+              <Input placeholder="Enter client name" />
+            </Form.Item>
+
+            <Form.Item name="budget" label="Budget">
+              <InputNumber
+                style={{ width: "100%" }}
+                formatter={(value) =>
+                  `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
+                parser={(value) => value?.replace(/\$\s?|(,*)/g, "") as any}
+              />
+            </Form.Item>
+
+            <Form.Item name="dateRange" label="Project Duration">
+              <DatePicker.RangePicker style={{ width: "100%" }} />
+            </Form.Item>
+
+            <Form.Item
+              name="description"
+              label="Description (SOW)"
+              rules={[{ required: true, message: "Description is required" }]}
+            >
+              <TextArea rows={6} />
+            </Form.Item>
+
+            <Form.Item>
+              <div
+                style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}
+              >
+                <Button onClick={handleCancel}>Cancel</Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={createLoading}
+                >
+                  Create
+                </Button>
+              </div>
+            </Form.Item>
+          </Form>
+        </Modal>
       </div>
     </MainLayout>
   );

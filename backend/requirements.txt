@@ -1,20 +1,27 @@
-fastapi
-uvicorn
-python-dotenv
-pydantic
-pydantic-settings
-sqlalchemy
-psycopg2-binary
-psycopg
-psycopg-pool
-requests
-httpx
-langchain
-langchain-core
-langchain-community
-langchain-openai
-langchain-anthropic
-langchain-google-genai
-langgraph
-langgraph-checkpoint-postgres
-openai
+# Web Framework & Core
+fastapi>=0.115.0  # รองรับ Pydantic V2 เต็มรูปแบบ
+uvicorn>=0.32.0  #
+python-dotenv  #
+pydantic>=2.10.0  # อัปเกรดเป็น V2 เพื่อแก้ปัญหา Compatibility (รองรับ Python 3.14)
+pydantic-settings>=2.6.0  # แยกออกมาจาก pydantic ใน V2
+
+# Database
+sqlalchemy>=2.0.36  #
+psycopg2-binary  #
+psycopg>=3.2.0  #
+psycopg-pool  #
+
+# HTTP Clients
+requests>=2.32.0  #
+httpx>=0.27.0  #
+
+# AI Stack (ต้องใช้เวอร์ชันใหม่เพื่อให้รองรับ Pydantic V2 และ Python 3.14)
+langchain>=0.3.0  # อัปเกรดเป็น v0.3 เพื่อรองรับ Pydantic V2 สมบูรณ์
+langchain-core>=0.3.0  #
+langchain-community>=0.3.0  #
+langchain-openai>=0.2.0  #
+langchain-anthropic>=0.2.0  #
+langchain-google-genai>=2.0.0  #
+langgraph>=0.2.0  #
+langgraph-checkpoint-postgres>=2.0.0  #
+openai>=1.55.0  #

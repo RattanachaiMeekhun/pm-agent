@@ -1,20 +1,20 @@
 from contextlib import asynccontextmanager
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver 
 from psycopg_pool import AsyncConnectionPool
-from app.config import DATABASE_URL
+from app.config import settings
 
 @asynccontextmanager
 async def get_checkpointer():
     """
     Context manager to provide a Postgres checkpointer.
     """
-    if not DATABASE_URL:
+    if not settings.SQLALCHEMY_DATABASE_URI:
         raise ValueError("DATABASE_URL is not set in .env")
 
     # ใช้ AsyncConnectionPool จาก psycopg_pool
     # kwargs={"autocommit": True} จำเป็นสำหรับบาง operation
     async with AsyncConnectionPool(
-        conninfo=DATABASE_URL,
+        conninfo=settings.SQLALCHEMY_DATABASE_URI,
         max_size=20,
         kwargs={"autocommit": True} 
     ) as pool:

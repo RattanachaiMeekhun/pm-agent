@@ -1,11 +1,9 @@
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from app.agent.state import AgentState
 from app.agent.prompts import DRAFTER_SYSTEM_PROMPT, REFINER_SYSTEM_PROMPT
-from app.agent.llm import get_llm
+from app.agent.llm import llm
 import json
 import re
-
-llm = get_llm()
 
 def _parse_json_response(content: str):
     content = content.strip()

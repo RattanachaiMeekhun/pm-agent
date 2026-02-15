@@ -1,19 +1,34 @@
-import os
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
+import os 
+MAX_RETRIES = 3
 
-# Load variables from .env file into os.environ
-load_dotenv()
+class Settings(BaseSettings):
+    PROJECT_NAME: str = "PM Agent API"
+    API_V1_STR: str = "/api/v1"
+    
+    # CORS
+    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    
+    # Database
+    URL_DATABASE: str | None = None
 
-# Access them using os.getenv
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+    # LLM Keys
+    GOOGLE_API_KEY: str | None = None
+    OPENAI_API_KEY: str | None = None
+    ANTHROPIC_API_KEY: str | None = None
+    
+    # Generic LLM Settings (from .env)
+    LLM_PROVIDER: str = "google"
+    LLM_MODEL_NAME: str = "gemini-1.5-flash"
+    LLM_API_KEY: str | None = None
+    LLM_BASE_URL: str | None = None
 
-# Database URL
-# Support both names during migration if needed, but prefer DATABASE_URL
-DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("URL_DATABASE")
+    @property
+    def SQLALCHEMY_DATABASE_URI(self) -> str:
+        if self.URL_DATABASE:
+            return self.URL_DATABASE
+        return "sqlite:///./sql_app.db" # Default fallback
 
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL (or URL_DATABASE) is not set. Please check your .env file.")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-if not ANTHROPIC_API_KEY:
-    # Warning only for now, as user might not have set it yet
-    print("Warning: ANTHROPIC_API_KEY is not set.")
+settings = Settings() 

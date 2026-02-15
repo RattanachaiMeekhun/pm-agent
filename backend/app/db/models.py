@@ -53,3 +53,11 @@ class Project(Base):
     # Relationships
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", backref="managed_projects")
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    thread_id = Column(String, index=True)
+    role = Column(String)  # user, assistant, system
+    content = Column(String)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())

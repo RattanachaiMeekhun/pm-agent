@@ -4,9 +4,10 @@ from langchain_core.messages import HumanMessage
 from requests import Session
 from app.agent.graph import build_graph
 from app.agent.checkpoint import get_checkpointer
-from app.schemas.project import ProjectCreate
+from app.schemas.project import ProjectCreate, Project
 from app.db.session import get_db
 from app.db import models # <--- Import ใหม่ 
+from sqlalchemy import func, desc
 router = APIRouter()
 
 class ChatRequest(BaseModel):
@@ -14,25 +15,18 @@ class ChatRequest(BaseModel):
     thread_id: str = "default_thread"
 
 @router.post("/consult")
-async def chat_endpoint(request: ChatRequest):
+async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
     try:
         # 1. ใช้ Context Manager เปิด connection กับ DB
         async with get_checkpointer() as checkpointer:
             
             # 2. Compile Graph พร้อม Memory (Checkpointer)
-            # หมายเหตุ: build_graph() เดิมเรา compile เลย ต้องแก้ให้รับ checkpointer
-            # แต่เพื่อความง่าย เราจะขอแก้ build_graph() ใน step ถัดไป
-            # ตอนนี้เอา logic compile มาไว้ตรงนี้ก่อน
-            
             workflow = build_graph(checkpointer=checkpointer) 
             
             # 3. เตรียม Config (ระบุ thread_id)
             config = {"configurable": {"thread_id": request.thread_id}}
             
             # 4. Invoke Graph
-            # ต้องดูสถานะปัจจุบันก่อน ถ้าเคยคุยแล้วจะดึง state เก่ามาต่อ
-            # result = await workflow.ainvoke(...) # ใช้ ainvoke (Async)
-            
             user_message = HumanMessage(content=request.message)
             result = await workflow.ainvoke(
                 {"messages": [user_message]}, 
@@ -41,6 +35,26 @@ async def chat_endpoint(request: ChatRequest):
             
             # 5. Extract Response
             bot_response = result["messages"][-1].content
+            
+            # --- Save to ChatMessage history for indexing ---
+            try:
+                # Save User Message
+                db.add(models.ChatMessage(
+                    thread_id=request.thread_id,
+                    role="user",
+                    content=request.message
+                ))
+                # Save Assistant Message
+                db.add(models.ChatMessage(
+                    thread_id=request.thread_id,
+                    role="assistant",
+                    content=bot_response
+                ))
+                db.commit()
+            except Exception as db_e:
+                print(f"Error saving chat history: {db_e}")
+                # Don't fail the request if saving history fails
+            
             return {
                 "response": bot_response,
                 "stage": result.get("stage", "unknown"),
@@ -89,32 +103,91 @@ async def get_chat_history(thread_id: str):
         print(f"Error fetching history: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/project/create")
-async def create_project(project:ProjectCreate, db: Session = Depends(get_db)):
+@router.post("/create", response_model=Project)
+async def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
     try:
+        # Check if project name already exists
         db_project = db.query(models.Project).filter(models.Project.name == project.name).first()
         if db_project:
             raise HTTPException(status_code=400, detail="Project with this name already exists")
-   
+            
+        # Check if thread_id is already associated with a project (optional check)
+        # db_thread = db.query(models.Project).filter(models.Project.thread_id == project.thread_id).first()
+        # if db_thread:
+        #     raise HTTPException(status_code=400, detail="This chat session is already associated with a project")
+
         new_project = models.Project(
             name=project.name,
             client=project.client,
             budget=project.budget,
             description=project.description,
             is_active=project.is_active,
-            status=project.status.value, 
+            status=project.status.value if project.status else None, 
             start_date=project.start_date,
-            end_date=project.end_date
+            end_date=project.end_date,
+            thread_id=project.thread_id
         )
         db.add(new_project)
         db.commit()
         db.refresh(new_project)
+        return new_project
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error creating project: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    return {"status": "Project creation endpoint"}
 
-@router.get("/project/{project_id}")
+@router.get("/{project_id}")
 async def get_project(project_id: str):
     # Placeholder for getting project details
     return {"project_id": project_id, "details": "Project details here"}
+
+@router.get("/threads", response_model=list[dict])
+def get_chat_threads(db: Session = Depends(get_db)):
+    """
+    Get a list of distinct chat threads (sessions) with their last activity time.
+    """
+    # 1. Find unique thread_ids and their most recent timestamp
+    subquery = (
+        db.query(
+            models.ChatMessage.thread_id,
+            func.max(models.ChatMessage.timestamp).label("max_time")
+        )
+        .group_by(models.ChatMessage.thread_id)
+        .subquery()
+    )
+
+    # 2. Query to get the results sorted by time
+    # We limit to last 20 sessions for performance
+    results = (
+        db.query(subquery.c.thread_id, subquery.c.max_time)
+        .order_by(desc(subquery.c.max_time))
+        .limit(20)
+        .all()
+    )
+
+    threads = []
+    for r in results:
+        # 3. Fetch the first user message to use as a "Title"
+        first_msg = (
+            db.query(models.ChatMessage)
+            .filter(
+                models.ChatMessage.thread_id == r.thread_id,
+                models.ChatMessage.role == "user"
+            )
+            .order_by(models.ChatMessage.timestamp.asc())
+            .first()
+        )
+        
+        # If no user message found (rare), use a generic title
+        title_text = first_msg.content if first_msg else "New Session"
+        # Truncate title
+        title = (title_text[:40] + "...") if len(title_text) > 40 else title_text
+        
+        threads.append({
+            "thread_id": r.thread_id,
+            "title": title,
+            "updated_at": r.max_time
+        })
+
+    return threads

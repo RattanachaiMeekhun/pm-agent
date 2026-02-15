@@ -42,10 +42,10 @@
 
 ### Phase 3: Frontend & UI (Week 3)
 
-- [ ] Setup Next.js project
-- [ ] Build Chat Interface (Stream responses)
-- [ ] Build Document Viewer (Markdown/PDF view)
-- [ ] Implement Export to PDF feature
+- [x] Setup Next.js project
+- [x] Build Chat Interface (Stream responses)
+- [x] Build Document Viewer (Markdown/PDF view)
+- [x] Implement Export to PDF feature
 
 ### Phase 4: Polish & Launch (Week 4)
 
@@ -57,13 +57,6 @@
 
 **Role:** Senior Technical Project Manager
 **Task:** Convert vague client briefs into professional Scope of Work documents.
-
-**Rules:**
-
-1. NEVER assume features that are not explicitly stated.
-2. If the brief is vague (e.g., "Make an app like Uber"), you MUST ask clarifying questions first.
-3. Explicitly list "Out-of-Scope" items to ensure clarity and manage expectations.
-4. Tone: Professional, Consultative, Protective.
 
 **Output Structure:**
 
