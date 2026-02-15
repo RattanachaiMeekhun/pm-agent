@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { ConfigProvider, theme } from "antd";
+import { App, ConfigProvider, theme } from "antd";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 
 type ThemeContextType = {
@@ -60,7 +60,7 @@ export default function ThemeProvider({
             },
           }}
         >
-          {children}
+          <App>{children}</App>
         </ConfigProvider>
       </AntdRegistry>
     </ThemeContext.Provider>

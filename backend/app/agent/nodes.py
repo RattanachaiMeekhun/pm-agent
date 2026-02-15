@@ -39,6 +39,9 @@ def refine_node(state: AgentState):
                  user_feedback = msg.content
                  break
     
+    if isinstance(current_sow, dict):
+        current_sow = json.dumps(current_sow, indent=2)
+
     messages = [
         SystemMessage(content=REFINER_SYSTEM_PROMPT),
         HumanMessage(content=f"CURRENT SOW:\n{current_sow}\n\nUSER FEEDBACK:\n{user_feedback}")

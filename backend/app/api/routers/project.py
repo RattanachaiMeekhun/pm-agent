@@ -4,15 +4,20 @@ from langchain_core.messages import HumanMessage
 from requests import Session
 from app.agent.graph import build_graph
 from app.agent.checkpoint import get_checkpointer
-from app.schemas.project import ProjectCreate, Project
+from app.schemas.project import ProjectCreate, ProjectUpdate, Project, ProjectListItem
 from app.db.session import get_db
-from app.db import models # <--- Import ใหม่ 
+from app.db import models
 from sqlalchemy import func, desc
+from typing import List
 router = APIRouter()
 
 class ChatRequest(BaseModel):
     message: str
     thread_id: str = "default_thread"
+
+@router.get("/list",response_model=List[ProjectListItem])
+def get_projects(db: Session = Depends(get_db)):
+    return db.query(models.Project).filter(models.Project.is_active == True).order_by(desc(models.Project.created_at)).all()
 
 @router.post("/consult")
 async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
@@ -107,7 +112,7 @@ async def get_chat_history(thread_id: str):
 async def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
     try:
         # Check if project name already exists
-        db_project = db.query(models.Project).filter(models.Project.name == project.name).first()
+        db_project = db.query(models.Project).filter(models.Project.thread_id == project.thread_id).first()
         if db_project:
             raise HTTPException(status_code=400, detail="Project with this name already exists")
             
@@ -117,15 +122,12 @@ async def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
         #     raise HTTPException(status_code=400, detail="This chat session is already associated with a project")
 
         new_project = models.Project(
-            name=project.name,
-            client=project.client,
-            budget=project.budget,
-            description=project.description,
             is_active=project.is_active,
             status=project.status.value if project.status else None, 
-            start_date=project.start_date,
-            end_date=project.end_date,
-            thread_id=project.thread_id
+            thread_id=project.thread_id,
+            sow_structured=project.sow_structured,
+            created_at=func.now(),
+            updated_at=func.now()
         )
         db.add(new_project)
         db.commit()
@@ -137,10 +139,32 @@ async def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
         print(f"Error creating project: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{project_id}")
-async def get_project(project_id: str):
-    # Placeholder for getting project details
-    return {"project_id": project_id, "details": "Project details here"}
+@router.get("/{project_id}", response_model=Project)
+async def get_project(project_id: int, db: Session = Depends(get_db)):
+    db_project = db.query(models.Project).filter(models.Project.id == project_id).first()
+    if not db_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return db_project
+
+@router.patch("/{project_id}", response_model=Project)
+async def update_project(project_id: int, payload: ProjectUpdate, db: Session = Depends(get_db)):
+    db_project = db.query(models.Project).filter(models.Project.id == project_id).first()
+    if not db_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    update_data = payload.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        if value is not None:
+            if field == "status" and hasattr(value, 'value'):
+                setattr(db_project, field, value.value)
+            else:
+                setattr(db_project, field, value)
+    
+    from sqlalchemy import func as sqla_func
+    db_project.updated_at = sqla_func.now()
+    db.commit()
+    db.refresh(db_project)
+    return db_project
 
 @router.get("/threads", response_model=list[dict])
 def get_chat_threads(db: Session = Depends(get_db)):

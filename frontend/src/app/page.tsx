@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Layout, Typography, Button, Space, Card, Row, Col, theme } from "antd";
 import {
   RocketOutlined,
@@ -19,6 +18,8 @@ export default function LandingPage() {
     token: { colorBgContainer, colorPrimary },
   } = theme.useToken();
   const { isDarkMode } = useTheme();
+
+ 
 
   return (
     <Layout style={{ minHeight: "100vh" }}>

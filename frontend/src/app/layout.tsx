@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css"; // Commented out to prioritize Ant Design
 import ThemeProvider from "@/providers/ThemeProvider";
-import QueryProvider from "@/providers/QueryProvider";
+import { StoreProvider } from "@/providers/StoreProvider";
 
 export const metadata: Metadata = {
   title: "PM Agent",
@@ -16,9 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body style={{ margin: 0, padding: 0 }}>
-        <QueryProvider>
+        <StoreProvider>
           <ThemeProvider>{children}</ThemeProvider>
-        </QueryProvider>
+        </StoreProvider>
       </body>
     </html>
   );

@@ -1,46 +1,37 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Layout,
   Input,
   Button,
   List,
   Avatar,
   Typography,
   Card,
-  Spin,
   Splitter,
   message as antMessage,
-  Empty,
   theme,
   Modal,
   Form,
-  DatePicker,
-  InputNumber,
-  Select,
   Drawer,
+  Tag,
+  Table,
 } from "antd";
 import {
   SendOutlined,
-  UserOutlined,
-  RobotOutlined,
-  FileTextOutlined,
   DownloadOutlined,
   ArrowLeftOutlined,
-  LoadingOutlined,
   SaveOutlined,
   HistoryOutlined,
 } from "@ant-design/icons";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { useRouter, useSearchParams } from "next/navigation";
 import MainLayout from "@/components/layout/MainLayout";
 import { useTheme } from "@/providers/ThemeProvider";
-import { useMutation } from "@tanstack/react-query";
-import api from "@/lib/Axios";
 
-const { TextArea } = Input;
+import api from "@/lib/Axios";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 const { Title, Text } = Typography;
 
 interface Message {
@@ -54,12 +45,77 @@ interface ChatThread {
   updated_at: string;
 }
 
+interface SowBlock {
+  section: string;
+  title: string;
+  content_type: "text" | "list" | "table";
+  data: any;
+}
+
+interface SowData {
+  project_info: {
+    title: string;
+    client: string;
+    version: string;
+  };
+  sow_blocks: SowBlock[];
+}
+
+const SowRenderer = ({ data }: { data: SowData }) => {
+  return (
+    <div className="sow-structured">
+      <div style={{ marginBottom: 32, textAlign: "center" }}>
+        <Title level={2}>{data.project_info.title}</Title>
+        <Text type="secondary">Client: {data.project_info.client}</Text>
+        <br />
+        <Tag color="blue">{data.project_info.version}</Tag>
+      </div>
+
+      {data.sow_blocks.map((block, idx) => (
+        <Card key={idx} style={{ marginBottom: 24 }} title={block.title}>
+          {block.content_type === "text" && (
+            <Typography.Paragraph>{block.data}</Typography.Paragraph>
+          )}
+          
+          {block.content_type === "list" && (
+             <List
+               size="small"
+               dataSource={block.data as string[]}
+               renderItem={(item) => <List.Item><Typography.Text>{item}</Typography.Text></List.Item>}
+             />
+          )}
+
+          {block.content_type === "table" && (
+            <Table
+              dataSource={(block.data.rows || []).map((row: string[], i: number) => {
+                const obj: any = { key: i };
+                block.data.headers.forEach((h: string, index: number) => {
+                  obj[h] = row[index];
+                });
+                return obj;
+              })}
+              columns={(block.data.headers || []).map((h: string) => ({
+                title: h,
+                dataIndex: h,
+                key: h,
+              }))}
+              pagination={false}
+              size="small"
+              bordered
+            />
+          )}
+        </Card>
+      ))}
+    </div>
+  );
+};
+
 export default function NewProjectPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [sowContent, setSowContent] = useState<string | null>(null);
+  const [sowContent, setSowContent] = useState<string | SowData | null>(null);
   const [threadId, setThreadId] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
@@ -69,9 +125,12 @@ export default function NewProjectPage() {
 
   const showModal = () => {
     setIsModalOpen(true);
-    // You might want to pre-fill description with sowContent
-    if (sowContent) {
-      form.setFieldsValue({ description: sowContent });
+    if (sowContent && typeof sowContent === 'object') {
+      const sow = sowContent as SowData;
+      form.setFieldsValue({
+        name: sow.project_info?.title || '',
+        client: sow.project_info?.client || 'Undisclosed',
+      });
     }
   };
 
@@ -82,15 +141,22 @@ export default function NewProjectPage() {
   const onFinish = async (values: any) => {
     setCreateLoading(true);
     try {
+      // Merge form values into sow_structured
+      let sowData = sowContent;
+      if (sowData && typeof sowData === 'object') {
+        sowData = {
+          ...(sowData as SowData),
+          project_info: {
+            ...(sowData as SowData).project_info,
+            title: values.name || (sowData as SowData).project_info?.title,
+            client: values.client || (sowData as SowData).project_info?.client,
+          },
+        };
+      }
+
       const payload = {
-        name: values.name,
-        client: values.client,
-        budget: values.budget,
-        description: values.description,
-        status: "not_started",
-        start_date: values.dateRange ? values.dateRange[0].toISOString() : null,
-        end_date: values.dateRange ? values.dateRange[1].toISOString() : null,
         thread_id: threadId,
+        sow_structured: sowData || null,
       };
 
       await api.post("/api/v1/project/create", payload);
@@ -108,19 +174,18 @@ export default function NewProjectPage() {
   };
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
+  const [isSending, setIsSending] = useState(false);
 
   const { isDarkMode } = useTheme();
   const { token } = theme.useToken();
 
-  const { mutate: sendMessage, isPending: isSending } = useMutation({
-    mutationFn: async ({ msg, tId }: { msg: string; tId: string }) => {
+  const sendMessage = useCallback(async ({ msg, tId }: { msg: string; tId: string }) => {
+    setIsSending(true);
+    try {
       const { data } = await api.post("/api/v1/project/consult", {
         message: msg,
         thread_id: tId,
       });
-      return data;
-    },
-    onSuccess: (data, variables) => {
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: data.response },
@@ -129,13 +194,14 @@ export default function NewProjectPage() {
         data.stage === "writer" ||
         (data?.response && data.response.toLowerCase().includes("sow"))
       ) {
-        fetchSow(variables.tId);
+        fetchSow(tId);
       }
-    },
-    onError: () => {
+    } catch {
       antMessage.error("Failed to get response.");
-    },
-  });
+    } finally {
+      setIsSending(false);
+    }
+  }, []);
 
   const fetchChatHistory = async (tId: string) => {
     try {
@@ -525,9 +591,13 @@ export default function NewProjectPage() {
                     }}
                   >
                     <Typography className="sow-markdown">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {sowContent}
-                      </ReactMarkdown>
+                      {typeof sowContent === "string" ? (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {sowContent}
+                        </ReactMarkdown>
+                      ) : (
+                        <SowRenderer data={sowContent as SowData} />
+                      )}
                     </Typography>
                   </Card>
                 </div>
@@ -541,7 +611,7 @@ export default function NewProjectPage() {
           placement="left"
           onClose={() => setHistoryOpen(false)}
           open={historyOpen}
-          width={320}
+          size={"large"}
           styles={{ body: { padding: 0 } }}
         >
           <List
@@ -576,6 +646,7 @@ export default function NewProjectPage() {
           open={isModalOpen}
           onCancel={handleCancel}
           footer={null}
+          width={600}
         >
           <Form
             form={form}
@@ -595,27 +666,20 @@ export default function NewProjectPage() {
               <Input placeholder="Enter client name" />
             </Form.Item>
 
-            <Form.Item name="budget" label="Budget">
-              <InputNumber
-                style={{ width: "100%" }}
-                formatter={(value) =>
-                  `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                }
-                parser={(value) => value?.replace(/\$\s?|(,*)/g, "") as any}
-              />
-            </Form.Item>
-
-            <Form.Item name="dateRange" label="Project Duration">
-              <DatePicker.RangePicker style={{ width: "100%" }} />
-            </Form.Item>
-
-            <Form.Item
-              name="description"
-              label="Description (SOW)"
-              rules={[{ required: true, message: "Description is required" }]}
-            >
-              <TextArea rows={6} />
-            </Form.Item>
+            {sowContent && typeof sowContent === 'object' && (
+              <Card
+                size="small"
+                title="SOW Preview"
+                style={{ marginBottom: 24 }}
+              >
+                <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
+                  Version: {(sowContent as SowData).project_info?.version}
+                </Typography.Paragraph>
+                <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
+                  Sections: {(sowContent as SowData).sow_blocks?.length || 0} blocks
+                </Typography.Paragraph>
+              </Card>
+            )}
 
             <Form.Item>
               <div
@@ -627,7 +691,7 @@ export default function NewProjectPage() {
                   htmlType="submit"
                   loading={createLoading}
                 >
-                  Create
+                  Create Project
                 </Button>
               </div>
             </Form.Item>

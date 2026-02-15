@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Enum
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import JSONB
 import enum
 
 class ProjectStatus(str, enum.Enum):
@@ -35,16 +36,11 @@ class Project(Base):
     __tablename__ = "projects"
     id = Column(Integer, primary_key=True, index=True)
     thread_id = Column(String, unique=True, index=True, nullable=False)
-    name = Column(String, unique=True, index=True, nullable=False)
-    client = Column(String, index=True)
-    budget = Column(Integer)
-    description = Column(String, index=True)
+    sow_structured= Column(JSONB, default=False)
     is_active = Column(Boolean, default=True)
 
     # New fields
     status = Column(String, default=ProjectStatus.NOT_STARTED.value)
-    start_date = Column(DateTime(timezone=True))
-    end_date = Column(DateTime(timezone=True))
     
     # Audit fields
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -53,6 +49,8 @@ class Project(Base):
     # Relationships
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", backref="managed_projects")
+    messages = relationship("ChatMessage", back_populates="project")
+
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
@@ -61,3 +59,6 @@ class ChatMessage(Base):
     role = Column(String)  # user, assistant, system
     content = Column(String)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    project = relationship("Project", back_populates="messages")
