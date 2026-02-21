@@ -35,15 +35,15 @@ export default function ThemeProvider({
 
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
-  // Set body background color explicitly because Antd ConfigProvider applies it to components, not body
+  // Apply data-theme attribute to html element so CSS variables in globals.css take effect
   useEffect(() => {
     if (isDarkMode) {
-      document.body.style.backgroundColor = "#141414"; // Antd dark bg
-      document.body.style.color = "#ffffff";
+      document.documentElement.setAttribute("data-theme", "dark");
     } else {
-      document.body.style.backgroundColor = "#f5f5f5"; // Antd default bg
-      document.body.style.color = "rgba(0, 0, 0, 0.88)";
+      document.documentElement.setAttribute("data-theme", "light");
     }
+    document.body.style.removeProperty("background-color");
+    document.body.style.removeProperty("color");
   }, [isDarkMode]);
 
   return (

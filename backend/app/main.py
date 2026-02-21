@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routers import project, sow
+from app.api.routers import project, sow, qa
 from app.db.session import engine   
 from app.db import models
 
@@ -27,6 +27,7 @@ models.Base.metadata.create_all(bind=engine)
 # Register Routers
 app.include_router(project.router, prefix="/api/v1/project", tags=["Project"])
 app.include_router(sow.router, prefix="/api/v1", tags=["SOW"])
+app.include_router(qa.router, prefix="/api/v1/qa", tags=["QA Agent"])
 
 @app.get("/")
 async def root():

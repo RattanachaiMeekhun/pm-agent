@@ -6,186 +6,119 @@ import {
   Menu,
   Button,
   Avatar,
-  Typography,
   Space,
-  theme,
-  Dropdown,
 } from "antd";
 import {
   AppstoreOutlined,
-  FolderOpenOutlined,
-  TeamOutlined,
-  FileTextOutlined,
   SettingOutlined,
   MenuOutlined,
   PlusOutlined,
-  FilterOutlined,
   UserOutlined,
   BulbOutlined,
   BulbFilled,
-  HistoryOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "@/providers/ThemeProvider";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import styles from "./layout.module.css";
 
-const { Header, Sider, Content } = Layout;
-const { Title, Text } = Typography;
+const { Sider } = Layout;
 
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const { isDarkMode, toggleTheme } = useTheme();
-  const {
-    token: { colorBgContainer, borderRadiusLG, colorBgLayout },
-  } = theme.useToken();
-  const router = useRouter(); // Import this
+  const router = useRouter();
+  const pathname = usePathname();
 
   const menuItems = [
     {
-      key: "dashboard",
+      key: "/dashboard",
       icon: <AppstoreOutlined />,
       label: "My Projects",
-      onClick: () => router.push("/dashboard"),
     },
-
     {
-      key: "settings",
+      key: "/settings",
       icon: <SettingOutlined />,
       label: "Settings",
     },
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <div className={styles.layout}>
       <Sider
         trigger={null}
         collapsible
         collapsed={collapsed}
         theme={isDarkMode ? "dark" : "light"}
-        style={{
-          borderRight: isDarkMode ? "none" : "1px solid #e5e5e5",
-          background: isDarkMode ? "#1e1e1e" : "#f0f4f9",
-        }}
+        className={styles.sider}
         width={260}
       >
-        <div
-          style={{
-            padding: "20px 16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className={styles.siderHeader}>
+          <div className={styles.logoContainer}>
             <Button
               type="text"
               icon={<MenuOutlined />}
               onClick={() => setCollapsed(!collapsed)}
-              style={{ fontSize: "16px" }}
+              style={{ color: "var(--text-primary)" }}
             />
             {!collapsed && (
-              <Typography.Text
-                strong
-                style={{ fontSize: 18, color: isDarkMode ? "#fff" : "#444746" }}
-              >
-                Gemini PM
-              </Typography.Text>
+              <Link href="/" className={styles.logoContainer}>
+                <div className={styles.logoIcon}>PM</div>
+                <span className={styles.logoText}>PM Agent</span>
+              </Link>
             )}
           </div>
         </div>
 
         {!collapsed && (
-          <div style={{ padding: "0 16px 16px 16px" }}>
-            <Button
-              block
-              style={{
-                borderRadius: 20,
-                height: 48,
-                background: isDarkMode ? "#2d2d2d" : "#dde3ea",
-                border: "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-start",
-                paddingLeft: 20,
-                color: isDarkMode ? "#e3e3e3" : "#1f1f1f",
-                fontSize: 14,
-                fontWeight: 500,
-              }}
-              icon={
-                <PlusOutlined
-                  style={{ color: isDarkMode ? "#a8c7fa" : "#444746" }}
-                />
-              }
+          <div className={styles.newProjectContainer}>
+            <button
+              className={styles.newProjectButton}
               onClick={() => router.push("/project/new")}
             >
+              <PlusOutlined style={{ color: "#6366f1" }} />
               New Project
-            </Button>
+            </button>
           </div>
         )}
 
         <Menu
           theme={isDarkMode ? "dark" : "light"}
           mode="inline"
-          defaultSelectedKeys={["dashboard"]}
+          selectedKeys={[pathname]}
           items={menuItems}
-          style={{
-            borderRight: 0,
-            background: "transparent",
-            fontSize: 14,
-          }}
+          className={styles.menu}
+          onClick={({ key }) => router.push(key)}
         />
 
-        {/* User Profile at Bottom */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            width: "100%",
-            padding: "16px",
-          }}
-        >
-          {/* ...existing user code... */}
+        {/* User Profile at Bottom (Placeholder) */}
+        <div className={styles.userProfile}>
+          {/* User info can go here */}
         </div>
       </Sider>
 
-      <Layout style={{ background: isDarkMode ? "#131314" : "#ffffff" }}>
-        <Header
-          style={{
-            padding: "0 24px",
-            background: "transparent",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end", // Push to right
-            height: 64,
-          }}
-        >
-          <Space>
+      <div className={styles.mainWrapper}>
+        <header className={styles.header}>
+          <Space size="middle">
             <Button
               type="text"
               icon={isDarkMode ? <BulbFilled /> : <BulbOutlined />}
               onClick={toggleTheme}
+              style={{ color: "var(--text-secondary)" }}
             />
             <Avatar
               icon={<UserOutlined />}
               src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-              style={{ cursor: "pointer" }}
+              style={{ cursor: "pointer", border: "2px solid var(--border-color)" }}
             />
           </Space>
-        </Header>
+        </header>
 
-        <Content
-          style={{
-            margin: 16,
-            padding: 0,
-            overflow: "hidden", // Let children handle scroll
-            background: "transparent",
-            borderRadius: isDarkMode ? 24 : 0,
-            // Gemini often has rounded corners on the main container in web app
-          }}
-        >
+        <main className={styles.contentContainer}>
           {children}
-        </Content>
-      </Layout>
-    </Layout>
+        </main>
+      </div>
+    </div>
   );
 };
 

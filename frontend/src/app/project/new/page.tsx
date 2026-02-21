@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import {
   Input,
   Button,
-  List,
   Avatar,
   Typography,
   Card,
@@ -25,6 +24,7 @@ import {
   HistoryOutlined,
 } from "@ant-design/icons";
 import { useRouter, useSearchParams } from "next/navigation";
+import styles from "./newproject.module.css";
 import MainLayout from "@/components/layout/MainLayout";
 import { useTheme } from "@/providers/ThemeProvider";
 
@@ -78,11 +78,13 @@ const SowRenderer = ({ data }: { data: SowData }) => {
           )}
           
           {block.content_type === "list" && (
-             <List
-               size="small"
-               dataSource={block.data as string[]}
-               renderItem={(item) => <List.Item><Typography.Text>{item}</Typography.Text></List.Item>}
-             />
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {(block.data as string[]).map((item, i) => (
+                <div key={i} style={{ padding: "8px 12px", borderBottom: "1px solid #f0f0f0" }}>
+                  <Typography.Text>{item}</Typography.Text>
+                </div>
+              ))}
+            </div>
           )}
 
           {block.content_type === "table" && (
@@ -110,7 +112,7 @@ const SowRenderer = ({ data }: { data: SowData }) => {
   );
 };
 
-export default function NewProjectPage() {
+function NewProjectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -190,15 +192,15 @@ export default function NewProjectPage() {
         ...prev,
         { role: "assistant", content: data.response },
       ]);
-      if (
-        data.stage === "writer" ||
-        (data?.response && data.response.toLowerCase().includes("sow"))
-      ) {
-        fetchSow(tId);
-      }
-    } catch {
+
+      
+      //Always fetch SOW to let user review and confirm
+      fetchSow(tId);
+      
+    } catch { 
+      setInput(msg);
       antMessage.error("Failed to get response.");
-    } finally {
+    } finally { 
       setIsSending(false);
     }
   }, []);
@@ -338,7 +340,7 @@ export default function NewProjectPage() {
     try {
       const response = await api.get(`/api/v1/sow/${tId}`);
       const data = response.data;
-      if (data.status === "completed" && data.sow_content) {
+      if (data.sow_content) {
         setSowContent(data.sow_content);
         antMessage.success("Scope of Work generated!");
       }
@@ -349,43 +351,18 @@ export default function NewProjectPage() {
 
   return (
     <MainLayout>
-      {/* Container fully fills the layout content area */}
-      <div
-        style={{
-          height: "100%", // Subtract header ? No header is transparent.
-          // Wait, MainLayout has 100vh. Content is flex 1.
-          display: "flex",
-          flexDirection: "column",
-          background: isDarkMode ? "#131314" : "#fff",
-          borderRadius: 24,
-          overflow: "hidden", // For rounded corners to clip content
-        }}
-      >
-        <Splitter style={{ flex: 1 }}>
+      <div className={styles.chatLayout}>
+        <Splitter style={{ flex: 1, border: 'none' }}>
           {/* --- Left Panel: Chat (Gemini Style) --- */}
           <Splitter.Panel defaultSize="45%" min="30%" max="70%">
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-                position: "relative",
-                background: isDarkMode ? "#131314" : "#fff",
-              }}
-            >
+            <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
               {/* Header for Back Button */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  paddingRight: 24,
-                }}
-              >
+              <div className={styles.chatHeader}>
                 <Button
                   icon={<ArrowLeftOutlined />}
                   type="text"
                   onClick={() => router.push("/dashboard")}
+                  style={{ color: 'var(--text-secondary)' }}
                 >
                   Back
                 </Button>
@@ -393,88 +370,47 @@ export default function NewProjectPage() {
                   icon={<HistoryOutlined />}
                   type="text"
                   onClick={openHistory}
+                  style={{ color: 'var(--text-secondary)' }}
                 >
                   History
                 </Button>
               </div>
 
               {/* Messages Area */}
-              <div
-                style={{
-                  flex: 1,
-                  overflowY: "auto",
-                  padding: "0 24px 100px 24px", // Bottom padding for input
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 32,
-                }}
-              >
-                <div
-                  style={{
-                    maxWidth: 700,
-                    margin: "0 auto",
-                    width: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 24,
-                  }}
-                >
-                  {messages.map((msg, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        display: "flex",
-                        flexDirection:
-                          msg.role === "user" ? "row-reverse" : "row",
-                        gap: 16,
-                        alignSelf:
-                          msg.role === "user" ? "flex-end" : "flex-start",
-                        maxWidth: "100%",
-                        width: "100%",
-                      }}
-                    >
-                      {msg.role === "assistant" && (
-                        <Avatar
-                          src="https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg" // Gemini Icon or similar
-                          style={{
-                            flexShrink: 0,
-                            backgroundColor: "transparent",
-                          }}
-                        />
-                      )}
-
+              <div className={styles.messagesArea}>
+                <div className={styles.messagesContainer}>
+                  {messages.map((msg, index) => {
+                    const isUser = msg.role === "user";
+                    return (
                       <div
-                        style={{
-                          maxWidth: "90%",
-                          padding: msg.role === "user" ? "12px 20px" : 0,
-                          backgroundColor:
-                            msg.role === "user"
-                              ? isDarkMode
-                                ? "#2d2d2d"
-                                : "#f0f4f9"
-                              : "transparent",
-                          borderRadius: 20,
-                          color: isDarkMode ? "#e3e3e3" : "#1f1f1f",
-                          fontSize: 16,
-                          lineHeight: 1.6,
-                        }}
+                        key={index}
+                        className={`${styles.messageRow} ${isUser ? styles.userMessage : styles.assistantMessage}`}
                       >
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {msg.content}
-                        </ReactMarkdown>
+                        {!isUser && (
+                          <div className={`${styles.avatar} ${styles.assistantAvatar}`}>
+                            ★
+                          </div>
+                        )}
+
+                        <div className={`${styles.messageBubble} ${isUser ? styles.userBubble : styles.assistantBubble}`}>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+                  
                   {isSending && (
-                    <div style={{ display: "flex", gap: 16 }}>
-                      <Avatar
-                        src="https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg"
-                        style={{ backgroundColor: "transparent" }}
-                        className="spin-animation" // You might need css
-                      />
-                      <Text type="secondary" style={{ marginTop: 8 }}>
-                        Thinking...
-                      </Text>
+                    <div className={`${styles.messageRow} ${styles.assistantMessage}`}>
+                      <div className={`${styles.avatar} ${styles.assistantAvatar}`} style={{ animation: 'spin 2s linear infinite' }}>
+                        ★
+                      </div>
+                      <div className={styles.messageBubble} style={{ display: 'flex', alignItems: 'center' }}>
+                        <Text type="secondary" style={{ marginTop: 2 }}>
+                          Thinking...
+                        </Text>
+                      </div>
                     </div>
                   )}
                   <div ref={messagesEndRef} />
@@ -482,41 +418,13 @@ export default function NewProjectPage() {
               </div>
 
               {/* Floating Input Area */}
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  padding: "24px",
-                  background: isDarkMode
-                    ? "linear-gradient(to top, #131314 80%, transparent)"
-                    : "linear-gradient(to top, #fff 80%, transparent)",
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
-                <div
-                  style={{
-                    width: "100%",
-                    maxWidth: 700,
-                    background: isDarkMode ? "#1e1e1e" : "#f0f4f9",
-                    borderRadius: 30,
-                    padding: "8px 8px 8px 24px",
-                    display: "flex",
-                    alignItems: "center",
-                    boxShadow: "0 0 0 1px transparent", // Can add focus ring
-                  }}
-                >
-                  <Input
+              <div className={styles.inputArea}>
+                <div className={styles.inputContainer}>
+                  <input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Reply to PM Copilot..."
-                    variant="borderless"
-                    style={{
-                      flex: 1,
-                      color: isDarkMode ? "#e3e3e3" : "#1f1f1f",
-                    }}
+                    className={styles.inputField}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
@@ -524,13 +432,13 @@ export default function NewProjectPage() {
                       }
                     }}
                   />
-                  <Button
-                    type="text"
-                    icon={<SendOutlined />}
+                  <button
+                    className={styles.sendButton}
                     disabled={!input.trim()}
                     onClick={handleSendMessage}
-                    style={{ borderRadius: "50%", width: 40, height: 40 }}
-                  />
+                  >
+                    <SendOutlined />
+                  </button>
                 </div>
               </div>
             </div>
@@ -539,57 +447,35 @@ export default function NewProjectPage() {
           {/* --- Right Panel: Live Document (Canvas) --- */}
           {sowContent && (
             <Splitter.Panel>
-              <div
-                style={{
-                  height: "100%",
-                  overflowY: "auto",
-                  padding: 32,
-                  background: isDarkMode ? "#1e1e1e" : "#f8f9fa",
-                  borderLeft: isDarkMode
-                    ? "1px solid #333"
-                    : "1px solid #efefef",
-                }}
-              >
-                <div style={{ maxWidth: 800, margin: "0 auto" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: 24,
-                    }}
-                  >
-                    <Title level={5} style={{ margin: 0 }}>
-                      LIVE DOCUMENT
-                    </Title>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <Button
-                        icon={<DownloadOutlined />}
-                        disabled={!sowContent}
-                        onClick={() => {
-                          // Export logic (e.g. PDF download) can be here
-                          console.log({ sowContent });
-                        }}
-                      >
-                        Export
-                      </Button>
-                      <Button
-                        type="primary"
-                        icon={<SaveOutlined />}
-                        onClick={showModal}
-                      >
-                        Create Project
-                      </Button>
-                    </div>
+              <div className={styles.docPanel}>
+                <div className={styles.docHeader}>
+                  <h2 className={styles.docTitle}>
+                    LIVE DOCUMENT
+                  </h2>
+                  <div style={{ display: "flex", gap: 12 }}>
+                    <Button
+                      icon={<DownloadOutlined />}
+                      disabled={!sowContent}
+                      onClick={() => {
+                        console.log({ sowContent });
+                      }}
+                      style={{ borderRadius: 8 }}
+                    >
+                      Export
+                    </Button>
+                    <Button
+                      type="primary"
+                      icon={<SaveOutlined />}
+                      onClick={showModal}
+                      style={{ borderRadius: 8, background: '#111827', color: '#fff' }}
+                    >
+                      Create Project
+                    </Button>
                   </div>
+                </div>
 
-                  <Card
-                    variant={"borderless"}
-                    style={{
-                      minHeight: "80vh",
-                      boxShadow: "0 4px 24px rgba(0,0,0,0.05)",
-                      borderRadius: 16,
-                    }}
-                  >
+                <div className={styles.docContent}>
+                  <div className={styles.docCard}>
                     <Typography className="sow-markdown">
                       {typeof sowContent === "string" ? (
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -599,7 +485,7 @@ export default function NewProjectPage() {
                         <SowRenderer data={sowContent as SowData} />
                       )}
                     </Typography>
-                  </Card>
+                  </div>
                 </div>
               </div>
             </Splitter.Panel>
@@ -614,31 +500,30 @@ export default function NewProjectPage() {
           size={"large"}
           styles={{ body: { padding: 0 } }}
         >
-          <List
-            dataSource={historyThreads}
-            renderItem={(item) => (
-              <List.Item
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {historyThreads.map((item) => (
+              <div
+                key={item.thread_id}
                 onClick={() => loadThread(item.thread_id)}
                 style={{
                   cursor: "pointer",
-                  padding: "12px 16px",
-                  borderBottom: "1px solid #f0f0f0",
+                  padding: "16px 24px",
+                  borderBottom: "1px solid var(--border-color)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                  transition: 'background 0.2s ease',
                 }}
-                className="history-item"
+                onMouseOver={(e) => (e.currentTarget.style.background = 'var(--bg-secondary)')}
+                onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
               >
-                <List.Item.Meta
-                  title={
-                    <Typography.Text ellipsis>{item.title}</Typography.Text>
-                  }
-                  description={
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      {new Date(item.updated_at).toLocaleString()}
-                    </Typography.Text>
-                  }
-                />
-              </List.Item>
-            )}
-          />
+                <Typography.Text ellipsis style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.title}</Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                  {new Date(item.updated_at).toLocaleString()}
+                </Typography.Text>
+              </div>
+            ))}
+          </div>
         </Drawer>
 
         <Modal
@@ -647,12 +532,14 @@ export default function NewProjectPage() {
           onCancel={handleCancel}
           footer={null}
           width={600}
+          centered
         >
           <Form
             form={form}
             layout="vertical"
             onFinish={onFinish}
             initialValues={{}}
+            style={{ marginTop: 24 }}
           >
             <Form.Item
               name="name"
@@ -669,27 +556,27 @@ export default function NewProjectPage() {
             {sowContent && typeof sowContent === 'object' && (
               <Card
                 size="small"
-                title="SOW Preview"
-                style={{ marginBottom: 24 }}
+                title={<span style={{ fontWeight: 600 }}>SOW Preview</span>}
+                style={{ marginBottom: 24, borderRadius: 12, border: '1px solid var(--border-color)' }}
+                headStyle={{ borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}
               >
                 <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-                  Version: {(sowContent as SowData).project_info?.version}
+                  <span style={{ color: 'var(--text-primary)' }}>Version:</span> {(sowContent as SowData).project_info?.version}
                 </Typography.Paragraph>
-                <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-                  Sections: {(sowContent as SowData).sow_blocks?.length || 0} blocks
+                <Typography.Paragraph type="secondary" style={{ margin: 0, marginTop: 8 }}>
+                  <span style={{ color: 'var(--text-primary)' }}>Sections:</span> {(sowContent as SowData).sow_blocks?.length || 0} blocks
                 </Typography.Paragraph>
               </Card>
             )}
 
-            <Form.Item>
-              <div
-                style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}
-              >
-                <Button onClick={handleCancel}>Cancel</Button>
+            <Form.Item style={{ marginBottom: 0 }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
+                <Button onClick={handleCancel} style={{ borderRadius: 8 }}>Cancel</Button>
                 <Button
                   type="primary"
                   htmlType="submit"
                   loading={createLoading}
+                  style={{ borderRadius: 8, background: '#111827', color: '#fff' }}
                 >
                   Create Project
                 </Button>
@@ -699,5 +586,13 @@ export default function NewProjectPage() {
         </Modal>
       </div>
     </MainLayout>
+  );
+}
+
+export default function NewProjectPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 48, textAlign: 'center' }}>Loading project environment...</div>}>
+      <NewProjectContent />
+    </Suspense>
   );
 }

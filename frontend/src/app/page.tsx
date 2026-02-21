@@ -1,220 +1,122 @@
 "use client";
 
-import { Layout, Typography, Button, Space, Card, Row, Col, theme } from "antd";
+import Link from "next/link";
+import { useTheme } from "@/providers/ThemeProvider";
 import {
-  RocketOutlined,
+  ArrowRightOutlined,
   ThunderboltOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
+  RocketOutlined,
 } from "@ant-design/icons";
-import Link from "next/link";
-import { useTheme } from "@/providers/ThemeProvider";
-
-const { Header, Content, Footer } = Layout;
-const { Title, Text, Paragraph } = Typography;
+import styles from "./page.module.css";
 
 export default function LandingPage() {
-  const {
-    token: { colorBgContainer, colorPrimary },
-  } = theme.useToken();
   const { isDarkMode } = useTheme();
 
- 
-
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Header
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          background: colorBgContainer,
-          padding: "0 24px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-          position: "sticky",
-          top: 0,
-          zIndex: 1000,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              background: colorPrimary,
-              borderRadius: 6,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-              fontWeight: "bold",
-            }}
-          >
-            PM
-          </div>
-          <Text strong style={{ fontSize: 18 }}>
-            PM Agent
-          </Text>
-        </div>
-        <Space size="large">
-          <Button type="text">Features</Button>
-          <Button type="text">Solutions</Button>
-          <Button type="text">Pricing</Button>
-          <Link href="/dashboard">
-            <Button type="primary">Launch Dashboard</Button>
+    <div className={`${styles.layout} ${isDarkMode ? styles.layoutDark : styles.layoutLight}`}>
+      <header className={styles.header}>
+        <Link href="/" className={styles.logoContainer}>
+          <div className={styles.logoIcon}>PM</div>
+          <span className={styles.logoText}>PM Agent</span>
+        </Link>
+        <nav className={styles.navLinks}>
+          <Link href="#features" className={styles.navLink}>Features</Link>
+          <Link href="#solutions" className={styles.navLink}>Solutions</Link>
+          <Link href="#pricing" className={styles.navLink}>Pricing</Link>
+        </nav>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <Link href="/login" className={styles.navLink} style={{ fontWeight: 600 }}>
+            Log in
           </Link>
-        </Space>
-      </Header>
+          <Link href="/dashboard" className={styles.primaryAction} style={{ padding: '10px 20px', fontSize: '14px' }}>
+            Get Started
+          </Link>
+        </div>
+      </header>
 
-      <Content>
+      <main>
         {/* Hero Section */}
-        <div
-          style={{
-            padding: "100px 24px",
-            textAlign: "center",
-            background: isDarkMode
-              ? "linear-gradient(135deg, #1f1f1f 0%, #141414 100%)"
-              : "linear-gradient(135deg, #f0f2f5 0%, #ffffff 100%)",
-          }}
-        >
-          <div style={{ maxWidth: 800, margin: "0 auto" }}>
-            <Title
-              level={1}
-              style={{
-                fontSize: 56,
-                marginBottom: 24,
-                background: `linear-gradient(to right, ${colorPrimary}, #a0d911)`,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              Supercharge Your Project Management with AI
-            </Title>
-            <Paragraph
-              style={{ fontSize: 20, color: "gray", marginBottom: 40 }}
-            >
-              Automate workflows, predict risks, and deliver projects faster
-              than ever before. The intelligent assistant for modern project
-              managers.
-            </Paragraph>
-            <Space size="middle">
-              <Link href="/dashboard">
-                <Button
-                  type="primary"
-                  size="large"
-                  shape="round"
-                  icon={<RocketOutlined />}
-                >
-                  Get Started for Free
-                </Button>
-              </Link>
-              <Button size="large" shape="round">
-                View Documentation
-              </Button>
-            </Space>
+        <section className={styles.hero}>
+          <div className={styles.heroBadge}>
+            <RocketOutlined className={styles.heroBadgeIcon} />
+            <span>PM Agent 2.0 is now live</span>
           </div>
-        </div>
-
-        {/* Features Section */}
-        <div style={{ padding: "80px 24px", background: colorBgContainer }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 60 }}>
-              <Title level={2}>Why Choose PM Agent?</Title>
-              <Text type="secondary" style={{ fontSize: 16 }}>
-                Everything you need to manage complex projects with ease.
-              </Text>
-            </div>
-            <Row gutter={[32, 32]}>
-              <Col xs={24} md={8}>
-                <Card
-                  variant="borderless"
-                  hoverable
-                  style={{ height: "100%", textAlign: "center" }}
-                >
-                  <ThunderboltOutlined
-                    style={{
-                      fontSize: 48,
-                      color: colorPrimary,
-                      marginBottom: 24,
-                    }}
-                  />
-                  <Title level={4}>Real-time Insights</Title>
-                  <Paragraph type="secondary">
-                    Get instant updates and predictive analytics on your project
-                    health, budget, and timeline.
-                  </Paragraph>
-                </Card>
-              </Col>
-              <Col xs={24} md={8}>
-                <Card
-                  variant="borderless"
-                  hoverable
-                  style={{ height: "100%", textAlign: "center" }}
-                >
-                  <SafetyCertificateOutlined
-                    style={{
-                      fontSize: 48,
-                      color: colorPrimary,
-                      marginBottom: 24,
-                    }}
-                  />
-                  <Title level={4}>Automated Compliance</Title>
-                  <Paragraph type="secondary">
-                    Ensure all your deliverables meet industry standards
-                    automatically with our AI compliance checker.
-                  </Paragraph>
-                </Card>
-              </Col>
-              <Col xs={24} md={8}>
-                <Card
-                  variant="borderless"
-                  hoverable
-                  style={{ height: "100%", textAlign: "center" }}
-                >
-                  <TeamOutlined
-                    style={{
-                      fontSize: 48,
-                      color: colorPrimary,
-                      marginBottom: 24,
-                    }}
-                  />
-                  <Title level={4}>Smart Resource Allocation</Title>
-                  <Paragraph type="secondary">
-                    Optimize team workload and prevent burnout with intelligent
-                    resource distribution suggestions.
-                  </Paragraph>
-                </Card>
-              </Col>
-            </Row>
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div
-          style={{
-            padding: "80px 24px",
-            textAlign: "center",
-            background: isDarkMode ? "#141414" : "#f0f2f5",
-          }}
-        >
-          <div style={{ maxWidth: 600, margin: "0 auto" }}>
-            <Title level={2}>Ready to Transform Your Workflow?</Title>
-            <Paragraph style={{ fontSize: 16, marginBottom: 32 }}>
-              Join thousands of project managers who are delivering better
-              results with PM Agent.
-            </Paragraph>
-            <Link href="/dashboard">
-              <Button type="primary" size="large" shape="round">
-                Start Your Free Trial
-              </Button>
+          <h1 className={styles.heroTitle}>
+            Supercharge Project Management <br />
+            <span className={styles.heroTitleHighlight}>Powered by AI</span>
+          </h1>
+          <p className={styles.heroSubtitle}>
+            Automate workflows, predict risks, and deliver projects faster than ever before. 
+            The intelligent assistant designed for modern product teams.
+          </p>
+          <div className={styles.buttonGroup}>
+            <Link href="/dashboard" className={styles.primaryAction}>
+              Start for free <ArrowRightOutlined />
+            </Link>
+            <Link href="#docs" className={styles.secondaryAction}>
+              View documentation
             </Link>
           </div>
-        </div>
-      </Content>
+        </section>
 
-      <Footer style={{ textAlign: "center", background: colorBgContainer }}>
-        PM Agent ©{new Date().getFullYear()} Created with Ant Design & AI
-      </Footer>
-    </Layout>
+        {/* Features Section */}
+        <section id="features" className={styles.features}>
+          <div className={styles.featuresContainer}>
+            <div className={styles.featuresHeader}>
+              <span className={styles.featuresSubtitle}>Platform Features</span>
+              <h2 className={styles.featuresTitle}>Everything you need to ship faster</h2>
+            </div>
+            <div className={styles.grid}>
+              <div className={styles.card}>
+                <div className={styles.cardIcon}>
+                  <ThunderboltOutlined />
+                </div>
+                <h3 className={styles.cardTitle}>Real-time Insights</h3>
+                <p className={styles.cardDesc}>
+                  Get instant updates and predictive analytics on your project health, budget, and timeline to make data-driven decisions.
+                </p>
+              </div>
+              <div className={styles.card}>
+                <div className={styles.cardIcon}>
+                  <SafetyCertificateOutlined />
+                </div>
+                <h3 className={styles.cardTitle}>Automated Compliance</h3>
+                <p className={styles.cardDesc}>
+                  Ensure all deliverables meet industry standards automatically with our AI-powered intelligent compliance checker.
+                </p>
+              </div>
+              <div className={styles.card}>
+                <div className={styles.cardIcon}>
+                  <TeamOutlined />
+                </div>
+                <h3 className={styles.cardTitle}>Smart Resource Allocation</h3>
+                <p className={styles.cardDesc}>
+                  Optimize team workload effortlessly and prevent burnout with AI-driven resource distribution suggestions.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className={styles.cta}>
+          <div className={styles.ctaContainer}>
+            <h2 className={styles.ctaTitle}>Ready to transform your workflow?</h2>
+            <p className={styles.ctaDesc}>
+              Join thousands of forward-thinking project managers who are delivering better results with PM Agent.
+            </p>
+            <Link href="/dashboard" className={styles.primaryAction} style={{ display: 'inline-flex' }}>
+              Start your free trial <ArrowRightOutlined />
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      <footer className={styles.footer}>
+        PM Agent © {new Date().getFullYear()} Designed with precision for modern teams.
+      </footer>
+    </div>
   );
 }

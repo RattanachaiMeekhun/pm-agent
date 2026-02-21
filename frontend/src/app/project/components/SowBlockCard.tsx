@@ -9,10 +9,10 @@ import {
     ArrowUpOutlined,
     ArrowDownOutlined,
 } from "@ant-design/icons";
-import { SowBlock, SowTableData } from "../../slice/project.types";
 import SowTextBlock from "./SowTextBlock";
 import SowListBlock from "./SowListBlock";
 import SowTableBlock from "./SowTableBlock";
+import { SowBlock, SowTableData } from "../slice/project.types";
 
 interface SowBlockCardProps {
     block: SowBlock;

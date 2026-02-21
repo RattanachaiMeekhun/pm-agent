@@ -1,0 +1,193 @@
+.dashboardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pageTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.primaryButton {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.statCard {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 24px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.statCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+  border-color: var(--text-secondary);
+}
+
+.statHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.statIconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--primary-glow);
+  color: #6366f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.statTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.statValue {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1;
+}
+
+.tableContainer {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 24px;
+  overflow: hidden;
+}
+
+/* Antd overrides for Dashboard Table */
+.tableContainer :global(.ant-table-wrapper) {
+  background: transparent;
+}
+
+.tableContainer :global(.ant-table) {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.tableContainer :global(.ant-table-thead > tr > th) {
+  background: transparent;
+  border-bottom: 1px solid var(--border-color) !important;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 16px;
+}
+
+.tableContainer :global(.ant-table-tbody > tr > td) {
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px;
+  transition: background 0.2s ease;
+}
+
+.tableContainer :global(.ant-table-tbody > tr:hover > td) {
+  background: var(--bg-secondary) !important;
+}
+
+.tableContainer :global(.ant-table-wrapper .ant-table-pagination.ant-pagination) {
+  margin: 24px 0 0 0;
+}
+
+.projectAvatar {
+  background: var(--primary-glow);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.projectName {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.projectSubtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Modal overrides using global selectors to break out of module hash */
+:global(.ant-modal-content) {
+  background-color: var(--bg-primary) !important;
+  border: 1px solid var(--border-color);
+  border-radius: 24px !important;
+  box-shadow: 0 24px 48px rgba(0,0,0,0.1) !important;
+}
+
+:global(.ant-modal-header) {
+  background-color: var(--bg-primary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding-bottom: 16px !important;
+}
+
+:global(.ant-modal-title) {
+  color: var(--text-primary) !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+:global(.ant-form-item-label > label) {
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+}
+
+:global(.ant-input) {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: 12px !important;
+  padding: 10px 16px !important;
+}
+
+:global(.ant-input:focus) {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 2px var(--primary-glow) !important;
+}

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Modal, Form, Input, Radio, Button } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-import { SowBlock } from "../../slice/project.types";
+import { SowBlock } from "../slice/project.types";
 
 interface AddBlockModalProps {
     onAdd: (block: SowBlock) => void;

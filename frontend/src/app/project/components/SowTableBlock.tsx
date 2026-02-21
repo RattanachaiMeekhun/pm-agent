@@ -3,7 +3,7 @@
 import React from "react";
 import { Input, Button, Table, Space } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import { SowTableData } from "../../slice/project.types";
+import { SowTableData } from "../slice/project.types";
 
 interface SowTableBlockProps {
     tableData: SowTableData;

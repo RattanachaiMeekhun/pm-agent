@@ -1,18 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import {
-  Card,
-  Col,
-  Row,
-  Statistic,
   Table,
   Tag,
   Avatar,
   Button,
   Space,
-  Typography,
+  Modal,
+  Input,
+  Form,
 } from "antd";
 import {
   FolderOpenOutlined,
@@ -23,21 +21,28 @@ import {
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Modal, Input, Form } from "antd";
 import { fetchProjectList } from "./slice/dashboard.thunks";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/store";
 import { selectProjectList } from "./slice/dashboard.selectors";
-
 import { Project } from "../project/slice/project.types";
+import styles from "./dashboard.module.css";
 
-const { Title } = Typography;
 const { TextArea } = Input;
- 
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [form] = Form.useForm();
+  const dispatch = useDispatch<AppDispatch>();
+  const projectList = useSelector(selectProjectList);
+
+  useEffect(() => {
+    const fetchList = async () => {
+      await dispatch(fetchProjectList());
+    };
+    fetchList();
+  }, [dispatch]);
 
   const columns: ColumnsType<Project> = [
     {
@@ -45,15 +50,16 @@ export default function DashboardPage() {
       dataIndex: "name",
       key: "name",
       render: (_, record) => (
-        <Space>
+        <Space size="middle">
           <Avatar
             shape="square"
-            style={{ backgroundColor: "#e6f7ff", color: "#1890ff" }}
+            className={styles.projectAvatar}
             icon={<FolderOpenOutlined />}
+            size="large"
           />
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontWeight: 500 }}>{record.name}</span>
-            <span style={{ fontSize: 12, color: "#8c8c8c" }}>
+            <span className={styles.projectName}>{record.name}</span>
+            <span className={styles.projectSubtitle}>
               {record.name}
             </span>
           </div>
@@ -66,8 +72,10 @@ export default function DashboardPage() {
       key: "client",
       render: (_, record) => (
         <Space>
-          <Avatar size="small" />
-          <span>{record.client}</span>
+          <Avatar size="small" style={{ backgroundColor: '#a855f7' }}>
+            {record.client ? record.client.charAt(0).toUpperCase() : 'U'}
+          </Avatar>
+          <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{record.client}</span>
         </Space>
       ),
     },
@@ -81,7 +89,7 @@ export default function DashboardPage() {
         if (status === "Drafting") color = "processing";
         if (status === "Waiting") color = "warning";
         return (
-          <Tag color={color} key={status}>
+          <Tag color={color} key={status} style={{ borderRadius: '12px', padding: '2px 10px', fontWeight: 600 }}>
             {status.toUpperCase()}
           </Tag>
         );
@@ -91,26 +99,25 @@ export default function DashboardPage() {
       title: "Last Modified",
       dataIndex: "updated_at",
       key: "updated_at",
+      render: (date) => (
+        <span style={{ color: 'var(--text-secondary)' }}>
+          {new Date(date).toLocaleDateString()}
+        </span>
+      ),
     },
     {
       title: "Actions",
       key: "action",
-      render: (_, record: Project) => <Button type="text" icon={<MoreOutlined />} onClick={() => {
-        router.push(`/project/view/${record.id}`);
-      }} />,
+      render: (_, record: Project) => (
+        <Button 
+          type="text" 
+          icon={<MoreOutlined />} 
+          onClick={() => router.push(`/project/view/${record.id}`)}
+          style={{ color: 'var(--text-secondary)' }}
+        />
+      ),
     },
   ];
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form] = Form.useForm();
-  const dispatch = useDispatch<AppDispatch>();
-  const projectList = useSelector(selectProjectList);
-  useEffect(() => {
-    const fetchList = async () => {
-      const res = await dispatch(fetchProjectList());
-      console.log(res);
-    };
-    fetchList();
-  }, []);
 
   const handleStartProject = async (values: any) => {
     const { projectName, clientName, requirements } = values;
@@ -125,25 +132,17 @@ export default function DashboardPage() {
 
   return (
     <MainLayout>
-      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div className={styles.dashboardContainer}>
         {/* Header Action Row */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Title level={4} style={{ margin: 0 }}>
-            My Projects
-          </Title>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => router.push("/project/new")}
+        <div className={styles.headerRow}>
+          <h1 className={styles.pageTitle}>My Projects</h1>
+          <button
+            className={styles.primaryButton}
+            onClick={() => setIsModalOpen(true)}
           >
+            <PlusOutlined />
             New Project
-          </Button>
+          </button>
         </div>
 
         {/* New Project Modal */}
@@ -152,8 +151,9 @@ export default function DashboardPage() {
           open={isModalOpen}
           onCancel={() => setIsModalOpen(false)}
           footer={null}
+          centered
         >
-          <Form layout="vertical" form={form} onFinish={handleStartProject}>
+          <Form layout="vertical" form={form} onFinish={handleStartProject} style={{ marginTop: '24px' }}>
             <Form.Item
               name="projectName"
               label="Project Name"
@@ -180,48 +180,57 @@ export default function DashboardPage() {
             >
               <TextArea rows={4} placeholder="I need a website for..." />
             </Form.Item>
-            <Form.Item>
-              <Button type="primary" htmlType="submit" block>
+            <Form.Item style={{ marginBottom: 0 }}>
+              <button className={styles.primaryButton} style={{ width: '100%', justifyContent: 'center', padding: '12px 20px', fontSize: '15px' }} type="submit">
                 Start Consultation
-              </Button>
+              </button>
             </Form.Item>
           </Form>
         </Modal>
 
         {/* Stats Row */}
-        <Row gutter={16}>
-          <Col span={8}>
-            <Card variant="borderless">
-              <Statistic
-                title="Total Projects"
-                value={0}
-                prefix={<FolderOpenOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col span={8}>
-            <Card variant="borderless">
-              <Statistic
-                title="Drafting in Progress"
-                value={0}
-                prefix={<EditOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col span={8}>
-            <Card variant="borderless">
-              <Statistic
-                title="Pending Review"
-                value={0}
-                prefix={<HourglassOutlined />}
-              />
-            </Card>
-          </Col>
-        </Row>
+        <div className={styles.statsGrid}>
+          <div className={styles.statCard}>
+            <div className={styles.statHeader}>
+              <div className={styles.statIconWrapper}>
+                <FolderOpenOutlined />
+              </div>
+              <h3 className={styles.statTitle}>Total Projects</h3>
+            </div>
+            <p className={styles.statValue}>{projectList.length || 0}</p>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statHeader}>
+              <div className={styles.statIconWrapper} style={{ color: '#a855f7' }}>
+                <EditOutlined />
+              </div>
+              <h3 className={styles.statTitle}>Drafting</h3>
+            </div>
+            <p className={styles.statValue}>
+              {projectList.filter((p: Project) => p.status === 'Drafting').length || 0}
+            </p>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statHeader}>
+              <div className={styles.statIconWrapper} style={{ color: '#f59e0b' }}>
+                <HourglassOutlined />
+              </div>
+              <h3 className={styles.statTitle}>Pending Review</h3>
+            </div>
+            <p className={styles.statValue}>
+              {projectList.filter((p: Project) => p.status === 'Waiting').length || 0}
+            </p>
+          </div>
+        </div>
 
         {/* Table Section */}
-        <div>
-          <Table columns={columns} dataSource={projectList} rowKey={"thread_id"} />
+        <div className={styles.tableContainer}>
+          <Table 
+            columns={columns} 
+            dataSource={projectList} 
+            rowKey={"id"} // Use id instead of thread_id as per Project type
+            pagination={{ placement: ["bottomCenter"] }}
+          />
         </div>
       </div>
     </MainLayout>

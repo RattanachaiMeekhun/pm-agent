@@ -4,12 +4,9 @@ from langchain_core.messages import BaseMessage
 def add_messages(left: list, right: list):
     return left + right
 
-class AgentState(TypedDict):
+class QAState(TypedDict):
     """
-    Represents the state of the Project Manager Agent.
+    Represents the state of the QA Agent.
     """
     messages: Annotated[List[BaseMessage], add_messages]
-    requirements: dict
-    missing_info: List[str]
-    sow_content: Optional[str]
-    stage: str
+    sow_content: dict

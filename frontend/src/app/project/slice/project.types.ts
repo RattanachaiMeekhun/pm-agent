@@ -27,6 +27,7 @@ export type Project = {
     id: number;
     name: string;
     client: string;
+    status: string;
     created_at: string;
     updated_at: string;
     owner_id: number;

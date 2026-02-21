@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
 from requests import Session
-from app.agent.graph import build_graph
-from app.agent.checkpoint import get_checkpointer
+from app.agents.sow_agent.graph import build_graph
+from app.agents.checkpoint import get_checkpointer
 from app.schemas.project import ProjectCreate, ProjectUpdate, Project, ProjectListItem
 from app.db.session import get_db
 from app.db import models
@@ -29,7 +29,7 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
             workflow = build_graph(checkpointer=checkpointer) 
             
             # 3. เตรียม Config (ระบุ thread_id)
-            config = {"configurable": {"thread_id": request.thread_id}}
+            config = {"configurable": {"thread_id": request.thread_id},"recursion_limit": 10}
             
             # 4. Invoke Graph
             user_message = HumanMessage(content=request.message)
