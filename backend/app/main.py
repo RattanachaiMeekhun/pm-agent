@@ -4,8 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routers import project, sow, qa
 from app.db.session import engine   
 from app.db import models
+from pwdlib import PasswordHash
+import secrets
 
 app = FastAPI(title="PM Agent API", version="1.0.0")
+
+password_hash = PasswordHash.recommended()
 
 # Configure CORS
 origins = [

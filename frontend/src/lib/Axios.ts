@@ -30,8 +30,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       if (typeof window !== "undefined") {
         // specific logic to redirect to login or clear token
-        // localStorage.removeItem('token');
-        // window.location.href = '/login';
+        localStorage.removeItem("token");
+        window.location.href = "/auth";
       }
     }
     return Promise.reject(error);

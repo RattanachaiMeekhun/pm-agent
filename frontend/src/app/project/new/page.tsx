@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { motion, AnimatePresence, MotionConfig, Variants } from "framer-motion";
 import {
   Input,
   Button,
@@ -61,54 +62,71 @@ interface SowData {
   sow_blocks: SowBlock[];
 }
 
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+};
+
 const SowRenderer = ({ data }: { data: SowData }) => {
   return (
-    <div className="sow-structured">
-      <div style={{ marginBottom: 32, textAlign: "center" }}>
+    <motion.div className="sow-structured" variants={containerVariants} initial="hidden" animate="visible">
+      <motion.div variants={itemVariants} style={{ marginBottom: 32, textAlign: "center" }}>
         <Title level={2}>{data.project_info.title}</Title>
         <Text type="secondary">Client: {data.project_info.client}</Text>
         <br />
         <Tag color="blue">{data.project_info.version}</Tag>
-      </div>
+      </motion.div>
 
       {data.sow_blocks.map((block, idx) => (
-        <Card key={idx} style={{ marginBottom: 24 }} title={block.title}>
-          {block.content_type === "text" && (
-            <Typography.Paragraph>{block.data}</Typography.Paragraph>
-          )}
-          
-          {block.content_type === "list" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {(block.data as string[]).map((item, i) => (
-                <div key={i} style={{ padding: "8px 12px", borderBottom: "1px solid #f0f0f0" }}>
-                  <Typography.Text>{item}</Typography.Text>
-                </div>
-              ))}
-            </div>
-          )}
+        <motion.div key={idx} variants={itemVariants}>
+          <Card style={{ marginBottom: 24 }} title={block.title}>
+            {block.content_type === "text" && (
+              <Typography.Paragraph>{block.data}</Typography.Paragraph>
+            )}
+            
+            {block.content_type === "list" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {(block.data as string[]).map((item, i) => (
+                  <div key={i} style={{ padding: "8px 12px", borderBottom: "1px solid #f0f0f0" }}>
+                    <Typography.Text>{item}</Typography.Text>
+                  </div>
+                ))}
+              </div>
+            )}
 
-          {block.content_type === "table" && (
-            <Table
-              dataSource={(block.data.rows || []).map((row: string[], i: number) => {
-                const obj: any = { key: i };
-                block.data.headers.forEach((h: string, index: number) => {
-                  obj[h] = row[index];
-                });
-                return obj;
-              })}
-              columns={(block.data.headers || []).map((h: string) => ({
-                title: h,
-                dataIndex: h,
-                key: h,
-              }))}
-              pagination={false}
-              size="small"
-              bordered
-            />
-          )}
-        </Card>
+            {block.content_type === "table" && (
+              <Table
+                dataSource={(block.data.rows || []).map((row: string[], i: number) => {
+                  const obj: any = { key: i };
+                  block.data.headers.forEach((h: string, index: number) => {
+                    obj[h] = row[index];
+                  });
+                  return obj;
+                })}
+                columns={(block.data.headers || []).map((h: string) => ({
+                  title: h,
+                  dataIndex: h,
+                  key: h,
+                }))}
+                pagination={false}
+                size="small"
+                bordered
+              />
+            )}
+          </Card>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 };
 
@@ -193,7 +211,6 @@ function NewProjectContent() {
         { role: "assistant", content: data.response },
       ]);
 
-      
       //Always fetch SOW to let user review and confirm
       fetchSow(tId);
       
@@ -300,17 +317,10 @@ function NewProjectContent() {
       }
     };
 
-    // We need to allow re-running if searchParams change (e.g. user clicks history item)
-    // So we reset initialized.current if threadId matches urlThreadId?
-    // Actually, if we use [searchParams], it runs on change.
-    // We need to handle the "initialized" logic carefully.
-
-    // Reset initialized if threadId in state != threadId in URL?
     const urlThreadId = searchParams.get("threadId");
     if (urlThreadId && urlThreadId !== threadId && threadId !== "") {
       initialized.current = false;
     }
-    // Also if no url threadId and we have one, it means we navigated to "new"?
     if (!urlThreadId && threadId !== "" && messages.length > 2) {
       // Logic is tricky here.
     }
@@ -379,11 +389,15 @@ function NewProjectContent() {
               {/* Messages Area */}
               <div className={styles.messagesArea}>
                 <div className={styles.messagesContainer}>
+                  <AnimatePresence initial={false}>
                   {messages.map((msg, index) => {
                     const isUser = msg.role === "user";
                     return (
-                      <div
+                      <motion.div
                         key={index}
+                        initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
                         className={`${styles.messageRow} ${isUser ? styles.userMessage : styles.assistantMessage}`}
                       >
                         {!isUser && (
@@ -397,12 +411,19 @@ function NewProjectContent() {
                             {msg.content}
                           </ReactMarkdown>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                   
                   {isSending && (
-                    <div className={`${styles.messageRow} ${styles.assistantMessage}`}>
+                    <motion.div 
+                      key="thinking-indicator"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                      transition={{ duration: 0.3 }}
+                      className={`${styles.messageRow} ${styles.assistantMessage}`}
+                    >
                       <div className={`${styles.avatar} ${styles.assistantAvatar}`} style={{ animation: 'spin 2s linear infinite' }}>
                         ★
                       </div>
@@ -411,8 +432,9 @@ function NewProjectContent() {
                           Thinking...
                         </Text>
                       </div>
-                    </div>
+                    </motion.div>
                   )}
+                  </AnimatePresence>
                   <div ref={messagesEndRef} />
                 </div>
               </div>
@@ -432,13 +454,15 @@ function NewProjectContent() {
                       }
                     }}
                   />
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     className={styles.sendButton}
                     disabled={!input.trim()}
                     onClick={handleSendMessage}
                   >
                     <SendOutlined />
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </div>
@@ -447,7 +471,12 @@ function NewProjectContent() {
           {/* --- Right Panel: Live Document (Canvas) --- */}
           {sowContent && (
             <Splitter.Panel>
-              <div className={styles.docPanel}>
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className={styles.docPanel}
+              >
                 <div className={styles.docHeader}>
                   <h2 className={styles.docTitle}>
                     LIVE DOCUMENT
@@ -478,16 +507,18 @@ function NewProjectContent() {
                   <div className={styles.docCard}>
                     <Typography className="sow-markdown">
                       {typeof sowContent === "string" ? (
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {sowContent}
-                        </ReactMarkdown>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {sowContent}
+                          </ReactMarkdown>
+                        </motion.div>
                       ) : (
                         <SowRenderer data={sowContent as SowData} />
                       )}
                     </Typography>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </Splitter.Panel>
           )}
         </Splitter>
@@ -502,9 +533,10 @@ function NewProjectContent() {
         >
           <div style={{ display: "flex", flexDirection: "column" }}>
             {historyThreads.map((item) => (
-              <div
+              <motion.div
                 key={item.thread_id}
                 onClick={() => loadThread(item.thread_id)}
+                whileHover={{ backgroundColor: "var(--bg-secondary)" }}
                 style={{
                   cursor: "pointer",
                   padding: "16px 24px",
@@ -512,16 +544,13 @@ function NewProjectContent() {
                   display: "flex",
                   flexDirection: "column",
                   gap: 4,
-                  transition: 'background 0.2s ease',
                 }}
-                onMouseOver={(e) => (e.currentTarget.style.background = 'var(--bg-secondary)')}
-                onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
               >
                 <Typography.Text ellipsis style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.title}</Typography.Text>
                 <Typography.Text type="secondary" style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                   {new Date(item.updated_at).toLocaleString()}
                 </Typography.Text>
-              </div>
+              </motion.div>
             ))}
           </div>
         </Drawer>
@@ -592,7 +621,9 @@ function NewProjectContent() {
 export default function NewProjectPage() {
   return (
     <Suspense fallback={<div style={{ padding: 48, textAlign: 'center' }}>Loading project environment...</div>}>
-      <NewProjectContent />
+      <MotionConfig reducedMotion="user">
+        <NewProjectContent />
+      </MotionConfig>
     </Suspense>
   );
 }

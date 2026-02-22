@@ -15,22 +15,38 @@ export default function LandingPage() {
   const { isDarkMode } = useTheme();
 
   return (
-    <div className={`${styles.layout} ${isDarkMode ? styles.layoutDark : styles.layoutLight}`}>
+    <div
+      className={`${styles.layout} ${isDarkMode ? styles.layoutDark : styles.layoutLight}`}
+    >
       <header className={styles.header}>
         <Link href="/" className={styles.logoContainer}>
           <div className={styles.logoIcon}>PM</div>
           <span className={styles.logoText}>PM Agent</span>
         </Link>
         <nav className={styles.navLinks}>
-          <Link href="#features" className={styles.navLink}>Features</Link>
-          <Link href="#solutions" className={styles.navLink}>Solutions</Link>
-          <Link href="#pricing" className={styles.navLink}>Pricing</Link>
+          <Link href="#features" className={styles.navLink}>
+            Features
+          </Link>
+          <Link href="#solutions" className={styles.navLink}>
+            Solutions
+          </Link>
+          <Link href="#pricing" className={styles.navLink}>
+            Pricing
+          </Link>
         </nav>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <Link href="/login" className={styles.navLink} style={{ fontWeight: 600 }}>
+        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          <Link
+            href="/auth"
+            className={styles.navLink}
+            style={{ fontWeight: 600 }}
+          >
             Log in
           </Link>
-          <Link href="/dashboard" className={styles.primaryAction} style={{ padding: '10px 20px', fontSize: '14px' }}>
+          <Link
+            href="/dashboard"
+            className={styles.primaryAction}
+            style={{ padding: "10px 20px", fontSize: "14px" }}
+          >
             Get Started
           </Link>
         </div>
@@ -48,8 +64,9 @@ export default function LandingPage() {
             <span className={styles.heroTitleHighlight}>Powered by AI</span>
           </h1>
           <p className={styles.heroSubtitle}>
-            Automate workflows, predict risks, and deliver projects faster than ever before. 
-            The intelligent assistant designed for modern product teams.
+            Automate workflows, predict risks, and deliver projects faster than
+            ever before. The intelligent assistant designed for modern product
+            teams.
           </p>
           <div className={styles.buttonGroup}>
             <Link href="/dashboard" className={styles.primaryAction}>
@@ -66,7 +83,9 @@ export default function LandingPage() {
           <div className={styles.featuresContainer}>
             <div className={styles.featuresHeader}>
               <span className={styles.featuresSubtitle}>Platform Features</span>
-              <h2 className={styles.featuresTitle}>Everything you need to ship faster</h2>
+              <h2 className={styles.featuresTitle}>
+                Everything you need to ship faster
+              </h2>
             </div>
             <div className={styles.grid}>
               <div className={styles.card}>
@@ -75,7 +94,8 @@ export default function LandingPage() {
                 </div>
                 <h3 className={styles.cardTitle}>Real-time Insights</h3>
                 <p className={styles.cardDesc}>
-                  Get instant updates and predictive analytics on your project health, budget, and timeline to make data-driven decisions.
+                  Get instant updates and predictive analytics on your project
+                  health, budget, and timeline to make data-driven decisions.
                 </p>
               </div>
               <div className={styles.card}>
@@ -84,7 +104,8 @@ export default function LandingPage() {
                 </div>
                 <h3 className={styles.cardTitle}>Automated Compliance</h3>
                 <p className={styles.cardDesc}>
-                  Ensure all deliverables meet industry standards automatically with our AI-powered intelligent compliance checker.
+                  Ensure all deliverables meet industry standards automatically
+                  with our AI-powered intelligent compliance checker.
                 </p>
               </div>
               <div className={styles.card}>
@@ -93,7 +114,8 @@ export default function LandingPage() {
                 </div>
                 <h3 className={styles.cardTitle}>Smart Resource Allocation</h3>
                 <p className={styles.cardDesc}>
-                  Optimize team workload effortlessly and prevent burnout with AI-driven resource distribution suggestions.
+                  Optimize team workload effortlessly and prevent burnout with
+                  AI-driven resource distribution suggestions.
                 </p>
               </div>
             </div>
@@ -103,11 +125,18 @@ export default function LandingPage() {
         {/* CTA Section */}
         <section className={styles.cta}>
           <div className={styles.ctaContainer}>
-            <h2 className={styles.ctaTitle}>Ready to transform your workflow?</h2>
+            <h2 className={styles.ctaTitle}>
+              Ready to transform your workflow?
+            </h2>
             <p className={styles.ctaDesc}>
-              Join thousands of forward-thinking project managers who are delivering better results with PM Agent.
+              Join thousands of forward-thinking project managers who are
+              delivering better results with PM Agent.
             </p>
-            <Link href="/dashboard" className={styles.primaryAction} style={{ display: 'inline-flex' }}>
+            <Link
+              href="/dashboard"
+              className={styles.primaryAction}
+              style={{ display: "inline-flex" }}
+            >
               Start your free trial <ArrowRightOutlined />
             </Link>
           </div>
@@ -115,7 +144,8 @@ export default function LandingPage() {
       </main>
 
       <footer className={styles.footer}>
-        PM Agent © {new Date().getFullYear()} Designed with precision for modern teams.
+        PM Agent © {new Date().getFullYear()} Designed with precision for modern
+        teams.
       </footer>
     </div>
   );

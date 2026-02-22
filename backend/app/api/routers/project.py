@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
-from requests import Session
+from sqlalchemy.orm import Session
 from app.agents.sow_agent.graph import build_graph
 from app.agents.checkpoint import get_checkpointer
 from app.schemas.project import ProjectCreate, ProjectUpdate, Project, ProjectListItem
