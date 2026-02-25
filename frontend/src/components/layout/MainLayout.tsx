@@ -1,13 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Layout,
-  Menu,
-  Button,
-  Avatar,
-  Space,
-} from "antd";
+import React, { useEffect, useState } from "react";
+import { Layout, Menu, Button, Avatar, Space } from "antd";
 import {
   AppstoreOutlined,
   SettingOutlined,
@@ -21,6 +15,8 @@ import { useTheme } from "@/providers/ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import styles from "./layout.module.css";
+import { RootState } from "@/store";
+import { useSelector } from "react-redux";
 
 const { Sider } = Layout;
 
@@ -29,6 +25,13 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
+  const { token } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/auth");
+    }
+  }, [token]);
 
   const menuItems = [
     {
@@ -92,9 +95,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         />
 
         {/* User Profile at Bottom (Placeholder) */}
-        <div className={styles.userProfile}>
-          {/* User info can go here */}
-        </div>
+        <div className={styles.userProfile}>{/* User info can go here */}</div>
       </Sider>
 
       <div className={styles.mainWrapper}>
@@ -109,14 +110,15 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <Avatar
               icon={<UserOutlined />}
               src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-              style={{ cursor: "pointer", border: "2px solid var(--border-color)" }}
+              style={{
+                cursor: "pointer",
+                border: "2px solid var(--border-color)",
+              }}
             />
           </Space>
         </header>
 
-        <main className={styles.contentContainer}>
-          {children}
-        </main>
+        <main className={styles.contentContainer}>{children}</main>
       </div>
     </div>
   );

@@ -2,18 +2,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from app.config import settings
 
+connect_args = {}
+if settings.SQLALCHEMY_DATABASE_URI.startswith("postgresql"):
+    connect_args["options"] = "-c search_path=public"
+
 engine = create_engine(
     settings.SQLALCHEMY_DATABASE_URI,
     pool_pre_ping=True,
-    # connect_args={
-    #     "keepalives": 1,
-    #     "keepalives_idle": 30,
-    #     "keepalives_interval": 10,
-    #     "keepalives_count": 5,
-    # }
-    connect_args={
-        "options": "-c search_path=public"
-    }
+    connect_args=connect_args
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

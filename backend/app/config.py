@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import os 
 MAX_RETRIES = 3
 
 class Settings(BaseSettings):
@@ -24,7 +23,7 @@ class Settings(BaseSettings):
     LLM_BASE_URL: str | None = None
 
     # Auth
-    SECRET_KEY: str | None = None
+    JWT_SECRET_KEY: str | None = None
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 

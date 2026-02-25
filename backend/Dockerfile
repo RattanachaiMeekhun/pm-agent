@@ -22,5 +22,4 @@ COPY . .
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
 
-# Run main.py when the container launches
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}
