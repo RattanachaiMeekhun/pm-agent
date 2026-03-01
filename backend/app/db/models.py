@@ -1,6 +1,8 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Enum
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship
+from app.db.session import Base
 import enum
 
 class ProjectStatus(str, enum.Enum):
@@ -9,8 +11,6 @@ class ProjectStatus(str, enum.Enum):
     ON_HOLD = "on_hold"
     COMPLETED = "completed"
 
-from sqlalchemy.orm import relationship
-from app.db.session import Base
 
 class User(Base):
     __tablename__ = "users"

@@ -1,10 +1,8 @@
-import os
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from app.config import settings
 
-# จำลองแนวคิด ADK: การกำหนด Agent Configuration ที่เป็นศูนย์กลาง
 class AgentConfig:
     """
     เลียนแบบ Google ADK ADK LlmAgent Config 
@@ -17,7 +15,6 @@ class AgentConfig:
         self.safety_settings = self._get_default_safety_settings()
 
     def _get_default_safety_settings(self):
-        # มาตรฐาน GEAR ต้องมีการคุมความปลอดภัย (Safety Governance)
         return {
             "HARM_CATEGORY_HARASSMENT": "BLOCK_MEDIUM_AND_ABOVE",
             "HARM_CATEGORY_HATE_SPEECH": "BLOCK_MEDIUM_AND_ABOVE",
@@ -29,7 +26,6 @@ class LLMProvider:
     """
     @staticmethod
     def get_model(config: AgentConfig):
-        # Use generic API key if specific one is missing
         api_key = settings.LLM_API_KEY
     
         if config.provider == "google":
@@ -67,11 +63,9 @@ class LLMProvider:
             )
         raise ValueError(f"Unsupported provider: {config.provider}")
 
-# วิธีการเรียกใช้งานใน nodes.py หรือ graph.py
-# สามารถเปลี่ยน Model ได้ง่ายๆ แค่แก้ Config
 current_config = AgentConfig(
     provider=settings.LLM_PROVIDER, 
     model_name=settings.LLM_MODEL_NAME, 
-    temperature=0.2 # ปรับต่ำเพื่อให้ PM Agent ตอบคำถามแม่นยำขึ้น
+    temperature=0.2 
 )
 llm = LLMProvider.get_model(current_config)

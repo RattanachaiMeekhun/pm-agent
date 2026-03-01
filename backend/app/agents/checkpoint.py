@@ -11,9 +11,6 @@ async def get_checkpointer():
     if not settings.SQLALCHEMY_DATABASE_URI:
         raise ValueError("DATABASE_URL is not set in .env")
 
-    # ใช้ AsyncConnectionPool จาก psycopg_pool
-    # kwargs={"autocommit": True} จำเป็นสำหรับบาง operation
-    # ต้องปิด prepared statements โดยกำหนด prepare_threshold=None เมื่อใช้ transaction pooler (Supabase port 6543)
     async with AsyncConnectionPool(
         conninfo=settings.SQLALCHEMY_DATABASE_URI,
         max_size=20,

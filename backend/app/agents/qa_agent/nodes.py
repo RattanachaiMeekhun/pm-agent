@@ -1,4 +1,4 @@
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import SystemMessage, AIMessage
 from app.agents.qa_agent.state import QAState
 from app.agents.qa_agent.prompts import QA_SYSTEM_PROMPT
 from app.agents.llm import llm
