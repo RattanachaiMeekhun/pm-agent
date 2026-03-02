@@ -8,7 +8,7 @@ pydantic-settings>=2.6.0  # แยกออกมาจาก pydantic ใน V2
 # Database
 sqlalchemy>=2.0.36  #
 psycopg2-binary  #
-psycopg>=3.2.0  #
+psycopg[binary]>=3.2.0  #
 psycopg-pool  #
 
 # AI Stack (ต้องใช้เวอร์ชันใหม่เพื่อให้รองรับ Pydantic V2 และ Python 3.14)

@@ -5,7 +5,7 @@ import FloatingLines from "@/components/layout/reactbits/FloatingLinest";
 import { Button, Form, Input, Typography } from "antd";
 import { UserOutlined, LockOutlined, MailOutlined } from "@ant-design/icons";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import loginThunk from "./slice/auth.thunks";
+import { loginThunk, registerThunk } from "./slice/auth.thunks";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store";
@@ -17,8 +17,15 @@ const LoginPage = () => {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
 
-  const onFinish = async (values: any) => {
+  const onLoginFinish = async (values: any) => {
     const res = await dispatch(loginThunk(values));
+    if (res.meta.requestStatus === "fulfilled") {
+      router.push("/dashboard");
+    }
+  };
+
+  const onRegisterFinish = async (values: any) => {
+    const res = await dispatch(registerThunk(values));
     if (res.meta.requestStatus === "fulfilled") {
       router.push("/dashboard");
     }
@@ -206,17 +213,22 @@ const LoginPage = () => {
                   <Form
                     name="login"
                     layout="vertical"
-                    onFinish={onFinish}
+                    onFinish={onLoginFinish}
                     onFinishFailed={onFinishFailed}
                     size="large"
                     requiredMark={false}
                   >
                     <Form.Item
-                      name="username"
+                      name="email"
                       rules={[
                         {
                           required: true,
-                          message: "Please enter your username",
+                          message: "Please enter your email",
+                        },
+                        {
+                          type: "email",
+                          message: "Please enter a valid email",
+                          pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                         },
                       ]}
                       style={{ marginBottom: "20px" }}
@@ -308,7 +320,7 @@ const LoginPage = () => {
                   <Form
                     name="register"
                     layout="vertical"
-                    onFinish={onFinish}
+                    onFinish={onRegisterFinish}
                     onFinishFailed={onFinishFailed}
                     size="large"
                     requiredMark={false}
@@ -331,26 +343,6 @@ const LoginPage = () => {
                           />
                         }
                         placeholder="Email Address"
-                        style={{ borderRadius: "10px" }}
-                      />
-                    </Form.Item>
-                    <Form.Item
-                      name="username"
-                      rules={[
-                        {
-                          required: true,
-                          message: "Please enter your username",
-                        },
-                      ]}
-                      style={{ marginBottom: "16px" }}
-                    >
-                      <Input
-                        prefix={
-                          <UserOutlined
-                            style={{ color: "var(--text-secondary)" }}
-                          />
-                        }
-                        placeholder="Username"
                         style={{ borderRadius: "10px" }}
                       />
                     </Form.Item>

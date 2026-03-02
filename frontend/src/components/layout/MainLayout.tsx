@@ -15,8 +15,9 @@ import { useTheme } from "@/providers/ThemeProvider";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import styles from "./layout.module.css";
-import { RootState } from "@/store";
-import { useSelector } from "react-redux";
+import { RootState, AppDispatch } from "@/store";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "@/app/auth/slice/auth.slice";
 
 const { Sider } = Layout;
 
@@ -25,13 +26,19 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-  const { token } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch<AppDispatch>();
+  const { token, user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     if (!token) {
       router.push("/auth");
     }
   }, [token]);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push("/auth");
+  };
 
   const menuItems = [
     {
@@ -95,7 +102,30 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         />
 
         {/* User Profile at Bottom (Placeholder) */}
-        <div className={styles.userProfile}>{/* User info can go here */}</div>
+        <div className={styles.userProfile}>
+          <Space align="center" style={{ width: "100%", padding: "0 16px" }}>
+            <Avatar 
+              size="small" 
+              icon={<UserOutlined />} 
+              src={user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"}
+            />
+            {!collapsed && (
+              <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+                <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {user?.username || "Guest"}
+                </span>
+                <Button 
+                  type="link" 
+                  size="small" 
+                  onClick={handleLogout} 
+                  style={{ padding: 0, height: "auto", fontSize: "12px", textAlign: "left" }}
+                >
+                  Logout
+                </Button>
+              </div>
+            )}
+          </Space>
+        </div>
       </Sider>
 
       <div className={styles.mainWrapper}>
@@ -109,7 +139,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             />
             <Avatar
               icon={<UserOutlined />}
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+              src={user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"}
               style={{
                 cursor: "pointer",
                 border: "2px solid var(--border-color)",

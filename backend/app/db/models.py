@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from app.db.session import Base
 import enum
 
+
 class ProjectStatus(str, enum.Enum):
     NOT_STARTED = "not_started"
     IN_PROGRESS = "in_progress"
@@ -20,6 +21,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     items = relationship("Item", back_populates="owner")
 
+
 class Item(Base):
     __tablename__ = "items"
 
@@ -30,16 +32,17 @@ class Item(Base):
 
     owner = relationship("User", back_populates="items")
 
+
 class Project(Base):
     __tablename__ = "projects"
     id = Column(Integer, primary_key=True, index=True)
     thread_id = Column(String, unique=True, index=True, nullable=False)
-    sow_structured= Column(JSONB, default=False)
+    sow_structured = Column(JSONB, default=False)
     is_active = Column(Boolean, default=True)
 
     # New fields
     status = Column(String, default=ProjectStatus.NOT_STARTED.value)
-    
+
     # Audit fields
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -48,6 +51,7 @@ class Project(Base):
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", backref="managed_projects")
     messages = relationship("ChatMessage", back_populates="project")
+
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
