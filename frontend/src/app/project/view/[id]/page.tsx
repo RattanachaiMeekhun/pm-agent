@@ -11,6 +11,7 @@ import {
     Result,
     Affix,
     Tag,
+    Tabs,
 } from "antd";
 import {
     ArrowLeftOutlined,
@@ -63,6 +64,7 @@ export default function ProjectViewPage({
 
     const [hasChanges, setHasChanges] = useState(false);
     const [initialHash, setInitialHash] = useState<string>("");
+    const [activeTab, setActiveTab] = useState("sow");
 
     useEffect(() => {
         dispatch(getProjectById(Number(id)));
@@ -123,95 +125,142 @@ export default function ProjectViewPage({
         );
     }
 
-    return (
-        <MainLayout>
-            <div className={styles.viewLayout}>
-                <Affix offsetTop={0}>
-                    <div className={styles.topbar}>
-                        <div className={styles.titleGroup}>
-                            <Button
-                                icon={<ArrowLeftOutlined />}
-                                type="text"
-                                onClick={() => router.push("/dashboard")}
-                                style={{ color: 'var(--text-secondary)' }}
-                            >
-                                Back
-                            </Button>
-                            <div className={styles.titleDivider} />
-                            <h2 className={styles.viewTitle}>Scope of Work</h2>
-                            {hasChanges && (
-                                <Tag color="warning" style={{ borderRadius: 20, fontSize: 11, border: 'none' }}>
-                                    Unsaved Changes
-                                </Tag>
-                            )}
-                            {saving && (
-                                <Tag icon={<CloudSyncOutlined spin />} color="processing" style={{ borderRadius: 20, fontSize: 11, border: 'none' }}>
-                                    Saving...
-                                </Tag>
-                            )}
+    const onChange = (key: string) => {
+        setActiveTab(key);
+    };
+
+    const items = [
+        {
+            label: "Overview",
+            key: "overview",
+            children: (
+                <div style={{ padding: 48, textAlign: 'center' }}>
+                    <Result
+                        icon={<FileTextOutlined style={{ color: '#6366f1', fontSize: 64 }} />}
+                        title="Project Overview"
+                        subTitle="This feature is coming soon. High-level project information will appear here."
+                    />
+                </div>
+            )
+        },
+        {
+            label: "Scope of Work",
+            key: "sow",
+            children: (
+                <div className={styles.viewLayout}>
+                    <Affix offsetTop={0}>
+                        <div className={styles.topbar}>
+                            <div className={styles.titleGroup}>
+                                <Button
+                                    icon={<ArrowLeftOutlined />}
+                                    type="text"
+                                    onClick={() => router.push("/dashboard")}
+                                    style={{ color: 'var(--text-secondary)' }}
+                                >
+                                    Back
+                                </Button>
+                                <div className={styles.titleDivider} />
+                                <h2 className={styles.viewTitle}>Scope of Work</h2>
+                                {hasChanges && (
+                                    <Tag color="warning" style={{ borderRadius: 20, fontSize: 11, border: 'none' }}>
+                                        Unsaved Changes
+                                    </Tag>
+                                )}
+                                {saving && (
+                                    <Tag icon={<CloudSyncOutlined spin />} color="processing" style={{ borderRadius: 20, fontSize: 11, border: 'none' }}>
+                                        Saving...
+                                    </Tag>
+                                )}
+                            </div>
+
+                            <Space size={16}>
+                                <Button
+                                    icon={<DownloadOutlined />}
+                                    onClick={() => message.info("Export feature coming soon!")}
+                                    style={{ borderRadius: 8 }}
+                                >
+                                    Export
+                                </Button>
+                                <Button
+                                    type="primary"
+                                    icon={<SaveOutlined />}
+                                    loading={saving}
+                                    disabled={!hasChanges}
+                                    onClick={handleSave}
+                                    style={{
+                                        borderRadius: 8,
+                                        fontWeight: 600,
+                                        background: hasChanges ? '#111827' : undefined,
+                                        color: hasChanges ? '#fff' : undefined,
+                                    }}
+                                >
+                                    Save Changes
+                                </Button>
+                            </Space>
                         </div>
+                    </Affix>
 
-                        <Space size={16}>
-                            <Button
-                                icon={<DownloadOutlined />}
-                                onClick={() => message.info("Export feature coming soon!")}
-                                style={{ borderRadius: 8 }}
-                            >
-                                Export
-                            </Button>
-                            <Button
-                                type="primary"
-                                icon={<SaveOutlined />}
-                                loading={saving}
-                                disabled={!hasChanges}
-                                onClick={handleSave}
-                                style={{
-                                    borderRadius: 8,
-                                    fontWeight: 600,
-                                    background: hasChanges ? '#111827' : undefined,
-                                    color: hasChanges ? '#fff' : undefined,
-                                }}
-                            >
-                                Save Changes
-                            </Button>
-                        </Space>
-                    </div>
-                </Affix>
+                    <div className={styles.documentArea}>
+                        <div className={styles.documentPaper}>
+                            <SowHeader
+                                projectInfo={sow.project_info}
+                                onUpdateField={updateProjectInfo}
+                            />
+                            <div className={styles.blocksContainer}>
+                                {sow.sow_blocks.map((block, index) => (
+                                    <SowBlockCard
+                                        key={`${block.section}-${index}`}
+                                        block={block}
+                                        blockIndex={index}
+                                        isFirst={index === 0}
+                                        isLast={index === sow.sow_blocks.length - 1}
+                                        onUpdateTitle={(title) => updateBlockTitle(index, title)}
+                                        onUpdateText={(text) => updateBlockText(index, text)}
+                                        onUpdateListItem={(itemIndex, value) => updateListItem(index, itemIndex, value)}
+                                        onAddListItem={() => addListItem(index)}
+                                        onRemoveListItem={(itemIndex) => removeListItem(index, itemIndex)}
+                                        onUpdateTableCell={(rowIdx, colIdx, val) => updateTableCell(index, rowIdx, colIdx, val)}
+                                        onAddTableRow={() => addTableRow(index)}
+                                        onRemoveTableRow={(rowIdx) => removeTableRow(index, rowIdx)}
+                                        onRemoveBlock={() => removeBlock(index)}
+                                        onMoveBlock={(dir) => moveBlock(index, dir)}
+                                    />
+                                ))}
 
-                <div className={styles.documentArea}>
-                    <div className={styles.documentPaper}>
-                        <SowHeader
-                            projectInfo={sow.project_info}
-                            onUpdateField={updateProjectInfo}
-                        />
-                        <div className={styles.blocksContainer}>
-                            {sow.sow_blocks.map((block, index) => (
-                                <SowBlockCard
-                                    key={`${block.section}-${index}`}
-                                    block={block}
-                                    blockIndex={index}
-                                    isFirst={index === 0}
-                                    isLast={index === sow.sow_blocks.length - 1}
-                                    onUpdateTitle={(title) => updateBlockTitle(index, title)}
-                                    onUpdateText={(text) => updateBlockText(index, text)}
-                                    onUpdateListItem={(itemIndex, value) => updateListItem(index, itemIndex, value)}
-                                    onAddListItem={() => addListItem(index)}
-                                    onRemoveListItem={(itemIndex) => removeListItem(index, itemIndex)}
-                                    onUpdateTableCell={(rowIdx, colIdx, val) => updateTableCell(index, rowIdx, colIdx, val)}
-                                    onAddTableRow={() => addTableRow(index)}
-                                    onRemoveTableRow={(rowIdx) => removeTableRow(index, rowIdx)}
-                                    onRemoveBlock={() => removeBlock(index)}
-                                    onMoveBlock={(dir) => moveBlock(index, dir)}
-                                />
-                            ))}
-
-                            <AddBlockModal onAdd={addBlock} />
+                                <AddBlockModal onAdd={addBlock} />
+                            </div>
                         </div>
                     </div>
                 </div>
+            )
+        },
+        {
+            label: "Tasks",
+            key: "tasks",
+            children: (
+                <div style={{ padding: 48, textAlign: 'center' }}>
+                    <Result
+                        icon={<CloudSyncOutlined style={{ color: '#6366f1', fontSize: 64 }} />}
+                        title="Tasks & Assignments"
+                        subTitle="This feature is coming soon. A task tracking interface will appear here."
+                    />
+                </div>
+            )
+        }
+    ];
+
+    return (
+        <MainLayout>
+            <div style={{ display: "flex", flexDirection: "column", height: "100%",}}>
+                <Tabs
+                    activeKey={activeTab}
+                    onChange={onChange}
+                    type="card"
+                    items={items}
+                />
             </div>
 
-            {hasChanges && (
+            {hasChanges && activeTab === "sow" && (
                 <FloatButton
                     icon={<SaveOutlined />}
                     type="primary"
